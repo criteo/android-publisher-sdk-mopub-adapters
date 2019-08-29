@@ -19,29 +19,3 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
--keepparameternames
-
--keep public class com.criteo.mediation.mopub.CriteoBannerEventListener
--keepclassmembers class com.criteo.mediation.mopub.CriteoBannerEventListener {
-    public *;
-}
-
--keep public class com.criteo.mediation.mopub.CriteoInterstitialEventListener
--keepclassmembers class com.criteo.mediation.mopub.CriteoInterstitialEventListener {
-    public *;
-}
-
--keep public class com.criteo.mediation.mopub.CriteoBannerAdapter
--keepclassmembers class com.criteo.mediation.mopub.CriteoBannerAdapter {
-    public *;
-}
-
--keep public class com.criteo.mediation.mopub.CriteoBaseAdapterConfiguration
--keepclassmembers class com.criteo.mediation.mopub.CriteoBaseAdapterConfiguration {
-    public *;
-}
-
--keep public class com.criteo.mediation.mopub.CriteoInterstitialAdapter
--keepclassmembers class com.criteo.mediation.mopub.CriteoInterstitialAdapter {
-    public *;
-}
