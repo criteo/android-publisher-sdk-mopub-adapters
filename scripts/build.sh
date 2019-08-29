@@ -5,12 +5,15 @@ mkdir -p build/output/
 cd build/output
 
 PUBLISHER_SDK_CONFIGURATION="release"
-#USERNAME=$(whoami)
+USERNAME=$(whoami)
+if [ $USERNAME = "jenkins" ]; then
+	USERNAME="qabot"
+fi
 
 echo "Downloading $PUBLISHER_SDK_CONFIGURATION build for publisher-sdk as $USERNAME from mochi... \n"
 rm -rf mochi
 
-git clone ssh://qabot@review.criteois.lan:29418/pub-sdk/mochi
+git clone ssh://$USERNAME@review.criteois.lan:29418/pub-sdk/mochi
 
 echo "Clone complete"
 
