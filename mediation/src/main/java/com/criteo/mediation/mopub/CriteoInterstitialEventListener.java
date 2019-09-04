@@ -6,7 +6,7 @@ import com.criteo.publisher.CriteoInterstitialAdListener;
 import com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
 import com.mopub.mobileads.MoPubErrorCode;
 
-public class CriteoInterstitialEventListener implements CriteoInterstitialAdListener ,
+public class CriteoInterstitialEventListener implements CriteoInterstitialAdListener,
         CriteoInterstitialAdDisplayListener {
 
     private CustomEventInterstitialListener customEventInterstitialListener;
@@ -23,10 +23,6 @@ public class CriteoInterstitialEventListener implements CriteoInterstitialAdList
     @Override
     public void onAdClosed() {
         customEventInterstitialListener.onInterstitialDismissed();
-    }
-
-    @Override
-    public void onAdReceived() {
     }
 
     @Override
@@ -66,4 +62,9 @@ public class CriteoInterstitialEventListener implements CriteoInterstitialAdList
     public void onAdFailedToDisplay(CriteoErrorCode code) {
         customEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.NETWORK_TIMEOUT);
     }
+
+    @Override
+    public void onAdReceived() {
+    }
+
 }

@@ -31,7 +31,7 @@ public class CriteoInterstitialAdapter extends CustomEventInterstitial {
             Map<String, Object> localExtras, Map<String, String> serverExtras) {
 
         if (TextUtils.isEmpty(serverExtras.toString())) {
-            MoPubLog.log(LOAD_FAILED, TAG, "Empty parameters");
+            MoPubLog.log(LOAD_FAILED, TAG, "Server parameters are empty");
             customEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
             return;
         }
@@ -39,7 +39,7 @@ public class CriteoInterstitialAdapter extends CustomEventInterstitial {
         String criteoPublisherId = serverExtras.get(CRITEO_PUBLISHER_ID);
 
         if (criteoPublisherId == null) {
-            MoPubLog.log(LOAD_FAILED, TAG, "Publised Id is null");
+            MoPubLog.log(LOAD_FAILED, TAG, "CriteoPublisherId cannot be null");
             customEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
             return;
         }
@@ -47,7 +47,7 @@ public class CriteoInterstitialAdapter extends CustomEventInterstitial {
         String adUnitId = serverExtras.get(ADUNIT_ID);
 
         if (adUnitId == null) {
-            MoPubLog.log(LOAD_FAILED, TAG, "Missing Adunit Id");
+            MoPubLog.log(LOAD_FAILED, TAG, "Missing adunit Id");
             customEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.MISSING_AD_UNIT_ID);
             return;
         }
@@ -56,7 +56,8 @@ public class CriteoInterstitialAdapter extends CustomEventInterstitial {
             Criteo.getInstance();
             InterstitialAdUnit interstitialAdUnit = new InterstitialAdUnit(adUnitId);
             criteoInterstitial = new CriteoInterstitial(context, interstitialAdUnit);
-            CriteoInterstitialEventListener listener = new CriteoInterstitialEventListener(customEventInterstitialListener);
+            CriteoInterstitialEventListener listener = new CriteoInterstitialEventListener(
+                    customEventInterstitialListener);
             criteoInterstitial.setCriteoInterstitialAdListener(listener);
             criteoInterstitial.setCriteoInterstitialAdDisplayListener(listener);
             criteoInterstitial.loadAd();
@@ -68,7 +69,7 @@ public class CriteoInterstitialAdapter extends CustomEventInterstitial {
                 Criteo.init((Application) (context.getApplicationContext()), criteoPublisherId, adUnits);
             } catch (CriteoInitException e1) {
             }
-            MoPubLog.log(LOAD_FAILED, TAG, "Unable to request interstitial. Initialization failed");
+            MoPubLog.log(LOAD_FAILED, TAG, "Initialization failed");
             customEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.INTERNAL_ERROR);
         }
     }

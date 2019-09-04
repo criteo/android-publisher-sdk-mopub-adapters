@@ -49,11 +49,9 @@ public class CriteoBannerEventListener implements CriteoBannerAdListener {
 
     @Override
     public void onAdOpened() {
-
     }
 
     @Override
     public void onAdClosed() {
-
     }
 }

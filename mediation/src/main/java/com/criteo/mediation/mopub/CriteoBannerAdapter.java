@@ -33,7 +33,7 @@ public class CriteoBannerAdapter extends CustomEventBanner {
             Map<String, Object> localExtras, Map<String, String> serverExtras) {
 
         if (TextUtils.isEmpty(localExtras.toString()) || TextUtils.isEmpty(serverExtras.toString())) {
-            MoPubLog.log(LOAD_FAILED, TAG, "Invalid Parameters");
+            MoPubLog.log(LOAD_FAILED, TAG, "Server parameters are empty");
             customEventBannerListener.onBannerFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
             return;
         }
@@ -42,7 +42,7 @@ public class CriteoBannerAdapter extends CustomEventBanner {
         String criteoPublisherId = serverExtras.get(CRITEO_PUBLISHER_ID);
 
         if (adSize == null || criteoPublisherId == null) {
-            MoPubLog.log(LOAD_FAILED, TAG, "Invalid Parameters");
+            MoPubLog.log(LOAD_FAILED, TAG, "CriteoPublisherId cannot be null");
             customEventBannerListener.onBannerFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
             return;
         }
@@ -50,7 +50,7 @@ public class CriteoBannerAdapter extends CustomEventBanner {
         String adUnitId = serverExtras.get(ADUNIT_ID);
 
         if (adUnitId == null) {
-            MoPubLog.log(LOAD_FAILED, TAG, "Missing Adunit Id");
+            MoPubLog.log(LOAD_FAILED, TAG, "Missing adUnit Id");
             customEventBannerListener.onBannerFailed(MoPubErrorCode.MISSING_AD_UNIT_ID);
             return;
         }
@@ -62,7 +62,7 @@ public class CriteoBannerAdapter extends CustomEventBanner {
             CriteoBannerEventListener listener = new CriteoBannerEventListener(customEventBannerListener);
             bannerView.setCriteoBannerAdListener(listener);
             bannerView.loadAd();
-            MoPubLog.log(LOAD_ATTEMPTED, TAG, "Bannerview loading");
+            MoPubLog.log(LOAD_ATTEMPTED, TAG, "BannerView is loading");
         } catch (Exception e) {
             List<AdUnit> adUnits = new ArrayList<>();
 
@@ -76,6 +76,13 @@ public class CriteoBannerAdapter extends CustomEventBanner {
         }
     }
 
+    @Override
+    protected void onInvalidate() {
+        if (bannerView != null) {
+            bannerView.destroy();
+        }
+    }
+
     private AdSize getAdSize(Map<String, Object> localExtras) {
         Object objHeight = localExtras.get(MOPUB_HEIGHT);
         Object objWidth = localExtras.get(MOPUB_WIDTH);
@@ -86,12 +93,5 @@ public class CriteoBannerAdapter extends CustomEventBanner {
         Integer height = (Integer) objHeight;
         Integer width = (Integer) objWidth;
         return new AdSize(width, height);
-    }
-
-    @Override
-    protected void onInvalidate() {
-        if (bannerView != null) {
-            bannerView.destroy();
-        }
     }
 }
