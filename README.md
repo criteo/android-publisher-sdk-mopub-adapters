@@ -1,5 +1,5 @@
 # Criteo Adapters for Mopub Mediation (Android)
-This repository contains Criteo’s Adapter for Mopub Mediation. It has to be used in conjunction with the Criteo Publisher SDK. For requirements, intructions and other info, see [Integrating Criteo with Mopub Mediation](https://publisherdocs.criteotilt.com/sdk-android/3.1/mopub-mediation/).
+This repository contains Criteo’s Adapter for Mopub Mediation. It must be used in conjunction with the Criteo Publisher SDK. For requirements, intructions, and other info, see [Integrating Criteo with Mopub Mediation](https://publisherdocs.criteotilt.com/sdk-android/3.1/mopub-mediation/).
 
 
 License
