@@ -2,7 +2,7 @@
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 <build>
-  <plugins>
+<plugins>
   <plugin>
     <groupId>com.simpligility.maven.plugins</groupId>
     <artifactId>android-maven-plugin</artifactId>
@@ -20,8 +20,8 @@
 </plugins>
 </build>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.mopub.ads.mediation</groupId>
-  <artifactId>criteo</artifactId>
+  <groupId>com.criteo.mediation.mopub</groupId>
+  <artifactId>criteo-adapter</artifactId>
   <version>1.0.0</version>
   <packaging>aar</packaging>
   <description>POM was created from install:install-file</description>
