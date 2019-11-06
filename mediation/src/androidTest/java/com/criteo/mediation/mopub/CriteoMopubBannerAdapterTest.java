@@ -1,15 +1,28 @@
 package com.criteo.mediation.mopub;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.inOrder;
+
+import android.app.Application;
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
+import com.criteo.publisher.Criteo;
+import com.criteo.publisher.CriteoBannerView;
+import com.criteo.publisher.model.AdUnit;
 import com.mopub.mobileads.CustomEventBanner;
 import com.mopub.mobileads.MoPubErrorCode;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -22,6 +35,9 @@ public class CriteoMopubBannerAdapterTest {
     private static final String CRITEO_PUBLISHER_ID = "cpId";
     private static final String MOPUB_WIDTH = "com_mopub_ad_width";
     private static final String MOPUB_HEIGHT = "com_mopub_ad_height";
+
+    private static final String TEST_ID = "30s6zt3ayypfyemwjvmp";
+    private static final String CP_ID = "B-056946";
 
     private Context context;
     private Map<String, Object> localExtras;
@@ -109,6 +125,69 @@ public class CriteoMopubBannerAdapterTest {
                 .onBannerFailed(MoPubErrorCode.MISSING_AD_UNIT_ID);
         Mockito.verify(customEventBannerListener, Mockito.times(1))
                 .onBannerFailed(MoPubErrorCode.INTERNAL_ERROR);
+    }
+
+    @Test
+    public void givenNotInitializedCriteo_WhenLoadingBannerTwice_MissFirstOpportunityBecauseOfBidCachingAndSucceedOnNextOne() throws Exception {
+        CriteoHelper.givenNotInitializedCriteo();
+
+        whenLoadingBannerTwice();
+
+        checkMissFirstOpportunityBecauseOfBidCachingAndSucceedOnNextOne();
+    }
+
+    @Test
+    public void givenInitializedCriteo_WhenLoadingBannerTwice_MissFirstOpportunityBecauseOfBidCachingAndSucceedOnNextOne() throws Exception {
+        // Clean the cache state first.
+        // TODO: To make all tests independent, we could place this @Before every tests.
+        CriteoHelper.givenNotInitializedCriteo();
+
+        Criteo.init((Application) context.getApplicationContext(), CP_ID, Collections.<AdUnit>emptyList());
+
+        whenLoadingBannerTwice();
+
+        checkMissFirstOpportunityBecauseOfBidCachingAndSucceedOnNextOne();
+    }
+
+    private void whenLoadingBannerTwice() throws Exception {
+        criteoMopubBannerAdapter = new CriteoBannerAdapter();
+        serverExtras.put(CRITEO_PUBLISHER_ID, CP_ID);
+        serverExtras.put(ADUNIT_ID, TEST_ID);
+        localExtras.put(MOPUB_WIDTH, 320);
+        localExtras.put(MOPUB_HEIGHT, 50);
+
+        final CyclicBarrier latch = new CyclicBarrier(2);
+
+        Runnable loadBanner = new Runnable() {
+            @Override
+            public void run() {
+                criteoMopubBannerAdapter
+                    .loadBanner(context, customEventBannerListener, localExtras, serverExtras);
+
+                try {
+                    latch.await();
+                } catch (InterruptedException | BrokenBarrierException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        final Handler handler = new Handler(Looper.getMainLooper());
+
+        handler.post(loadBanner);
+        latch.await();
+        Thread.sleep(5000);
+
+        handler.post(loadBanner);
+        latch.await();
+        Thread.sleep(2000);
+    }
+
+    private void checkMissFirstOpportunityBecauseOfBidCachingAndSucceedOnNextOne() {
+        InOrder inOrder = inOrder(customEventBannerListener);
+        inOrder.verify(customEventBannerListener).onBannerFailed(MoPubErrorCode.NETWORK_NO_FILL);
+        inOrder.verify(customEventBannerListener).onBannerLoaded(any(CriteoBannerView.class));
+        inOrder.verifyNoMoreInteractions();
     }
 
 }

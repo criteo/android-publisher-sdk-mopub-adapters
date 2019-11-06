@@ -16,6 +16,7 @@ import com.mopub.common.logging.MoPubLog;
 import com.mopub.mobileads.CustomEventInterstitial;
 import com.mopub.mobileads.MoPubErrorCode;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -53,7 +54,12 @@ public class CriteoInterstitialAdapter extends CustomEventInterstitial {
         }
 
         try {
-            Criteo.getInstance();
+            Criteo.init((Application) (context.getApplicationContext()), criteoPublisherId,
+                Collections.<AdUnit>emptyList());
+        } catch (CriteoInitException e1) {
+        }
+
+        try {
             InterstitialAdUnit interstitialAdUnit = new InterstitialAdUnit(adUnitId);
             criteoInterstitial = new CriteoInterstitial(context, interstitialAdUnit);
             CriteoInterstitialEventListener listener = new CriteoInterstitialEventListener(
@@ -63,12 +69,6 @@ public class CriteoInterstitialAdapter extends CustomEventInterstitial {
             criteoInterstitial.loadAd();
             MoPubLog.log(LOAD_ATTEMPTED, TAG, "Criteo Interstitial is loading");
         } catch (Exception e) {
-            List<AdUnit> adUnits = new ArrayList<>();
-
-            try {
-                Criteo.init((Application) (context.getApplicationContext()), criteoPublisherId, adUnits);
-            } catch (CriteoInitException e1) {
-            }
             MoPubLog.log(LOAD_FAILED, TAG, "Initialization failed");
             customEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.INTERNAL_ERROR);
         }

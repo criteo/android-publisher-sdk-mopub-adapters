@@ -15,8 +15,7 @@ import com.criteo.publisher.model.BannerAdUnit;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.mobileads.CustomEventBanner;
 import com.mopub.mobileads.MoPubErrorCode;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
 import java.util.Map;
 
 public class CriteoBannerAdapter extends CustomEventBanner {
@@ -56,7 +55,12 @@ public class CriteoBannerAdapter extends CustomEventBanner {
         }
 
         try {
-            Criteo.getInstance();
+            Criteo.init((Application) (context.getApplicationContext()), criteoPublisherId,
+                Collections.<AdUnit>emptyList());
+        } catch (CriteoInitException e1) {
+        }
+
+        try {
             BannerAdUnit bannerAdUnit = new BannerAdUnit(adUnitId, adSize);
             bannerView = new CriteoBannerView(context, bannerAdUnit);
             CriteoBannerEventListener listener = new CriteoBannerEventListener(customEventBannerListener);
@@ -64,13 +68,6 @@ public class CriteoBannerAdapter extends CustomEventBanner {
             bannerView.loadAd();
             MoPubLog.log(LOAD_ATTEMPTED, TAG, "BannerView is loading");
         } catch (Exception e) {
-            List<AdUnit> adUnits = new ArrayList<>();
-
-            try {
-                Criteo.init((Application) (context.getApplicationContext()), criteoPublisherId, adUnits);
-            } catch (CriteoInitException e1) {
-
-            }
             MoPubLog.log(LOAD_FAILED, TAG, "Initialization failed");
             customEventBannerListener.onBannerFailed(MoPubErrorCode.INTERNAL_ERROR);
         }
