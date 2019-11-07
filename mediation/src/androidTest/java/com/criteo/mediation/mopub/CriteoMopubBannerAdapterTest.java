@@ -111,23 +111,6 @@ public class CriteoMopubBannerAdapterTest {
     }
 
     @Test
-    public void requestBannerAdWithNullCriteo() {
-        criteoMopubBannerAdapter = new CriteoBannerAdapter();
-        serverExtras.put(CRITEO_PUBLISHER_ID, "123");
-        serverExtras.put(ADUNIT_ID, BANNER_ADUNIT_ID);
-        localExtras.put(MOPUB_WIDTH, 320);
-        localExtras.put(MOPUB_HEIGHT, 50);
-
-        criteoMopubBannerAdapter.loadBanner(context, customEventBannerListener, localExtras, serverExtras);
-        Mockito.verify(customEventBannerListener, Mockito.times(0))
-                .onBannerFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
-        Mockito.verify(customEventBannerListener, Mockito.times(0))
-                .onBannerFailed(MoPubErrorCode.MISSING_AD_UNIT_ID);
-        Mockito.verify(customEventBannerListener, Mockito.times(1))
-                .onBannerFailed(MoPubErrorCode.INTERNAL_ERROR);
-    }
-
-    @Test
     public void givenNotInitializedCriteo_WhenLoadingBannerTwice_MissFirstOpportunityBecauseOfBidCachingAndSucceedOnNextOne() throws Exception {
         CriteoHelper.givenNotInitializedCriteo();
 

@@ -89,22 +89,6 @@ public class CriteoMopubInterstitialAdapterTest {
     }
 
     @Test
-    public void requestBannerAdWithNullCriteo() {
-        serverExtras.put(CRITEO_PUBLISHER_ID, "123");
-        serverExtras.put(ADUNIT_ID, BANNER_ADUNIT_ID);
-        localExtras.put(MOPUB_WIDTH, 320);
-        localExtras.put(MOPUB_HEIGHT, 50);
-
-        criteoMopubInterstitialAdapter.loadInterstitial(context, customEventInterstitialListener, localExtras, serverExtras);
-        Mockito.verify(customEventInterstitialListener, Mockito.times(0))
-                .onInterstitialFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
-        Mockito.verify(customEventInterstitialListener, Mockito.times(0))
-                .onInterstitialFailed(MoPubErrorCode.MISSING_AD_UNIT_ID);
-        Mockito.verify(customEventInterstitialListener, Mockito.times(1))
-                .onInterstitialFailed(MoPubErrorCode.INTERNAL_ERROR);
-    }
-
-    @Test
     public void givenNotInitializedCriteo_WhenLoadingInterstitialTwice_MissFirstOpportunityBecauseOfBidCachingAndSucceedOnNextOne() throws Exception {
         CriteoHelper.givenNotInitializedCriteo();
 
