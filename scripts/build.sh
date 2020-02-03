@@ -1,7 +1,12 @@
 #!/bin/bash -l
 
+# uncomment to debug
+# set -x
+
 rm -rf build/output
 mkdir -p build/output/
+
+scripts_dir=$PWD
 cd build/output
 
 PUBLISHER_SDK_CONFIGURATION="release"
@@ -22,4 +27,4 @@ echo "Using $ANDROID_HOME as android sdk"
 #echo "sdk.dir=/Users/$USERNAME/Library/Android/sdk" >> local.properties
 
 ./gradlew clean build
-cp -f publisher-sdk/build/outputs/aar/publisher-sdk-$PUBLISHER_SDK_CONFIGURATION.aar ../../../publisher-sdk-release/
+cp -f publisher-sdk/build/outputs/aar/publisher-sdk-$PUBLISHER_SDK_CONFIGURATION.aar $scripts_dir/publisher-sdk-release/
