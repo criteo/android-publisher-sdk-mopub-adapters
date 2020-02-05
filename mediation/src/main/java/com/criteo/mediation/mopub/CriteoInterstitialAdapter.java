@@ -1,23 +1,16 @@
 package com.criteo.mediation.mopub;
 
-
 import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.LOAD_ATTEMPTED;
 import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.LOAD_FAILED;
 
-import android.app.Application;
 import android.content.Context;
-import android.text.TextUtils;
-import com.criteo.publisher.Criteo;
-import com.criteo.publisher.CriteoInitException;
+import android.support.annotation.NonNull;
 import com.criteo.publisher.CriteoInterstitial;
-import com.criteo.publisher.model.AdUnit;
 import com.criteo.publisher.model.InterstitialAdUnit;
+import com.mopub.common.VisibleForTesting;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.mobileads.CustomEventInterstitial;
 import com.mopub.mobileads.MoPubErrorCode;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 public class CriteoInterstitialAdapter extends CustomEventInterstitial {
@@ -27,11 +20,22 @@ public class CriteoInterstitialAdapter extends CustomEventInterstitial {
     protected static final String CRITEO_PUBLISHER_ID = "cpId";
     private CriteoInterstitial criteoInterstitial;
 
+    private final CriteoInitializer criteoInitializer;
+
+    public CriteoInterstitialAdapter() {
+        this(new CriteoInitializer());
+    }
+
+    @VisibleForTesting
+    CriteoInterstitialAdapter(@NonNull CriteoInitializer criteoInitializer) {
+        this.criteoInitializer = criteoInitializer;
+    }
+
     @Override
     protected void loadInterstitial(Context context, CustomEventInterstitialListener customEventInterstitialListener,
             Map<String, Object> localExtras, Map<String, String> serverExtras) {
 
-        if (TextUtils.isEmpty(serverExtras.toString())) {
+        if (serverExtras == null || serverExtras.isEmpty()) {
             MoPubLog.log(LOAD_FAILED, TAG, "Server parameters are empty");
             customEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
             return;
@@ -53,11 +57,7 @@ public class CriteoInterstitialAdapter extends CustomEventInterstitial {
             return;
         }
 
-        try {
-            Criteo.init((Application) (context.getApplicationContext()), criteoPublisherId,
-                Collections.<AdUnit>emptyList());
-        } catch (CriteoInitException e1) {
-        }
+        criteoInitializer.init(context, criteoPublisherId);
 
         try {
             InterstitialAdUnit interstitialAdUnit = new InterstitialAdUnit(adUnitId);
