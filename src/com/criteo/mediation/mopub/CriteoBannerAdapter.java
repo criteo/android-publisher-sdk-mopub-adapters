@@ -3,19 +3,15 @@ package com.criteo.mediation.mopub;
 import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.LOAD_ATTEMPTED;
 import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.LOAD_FAILED;
 
-import android.app.Application;
 import android.content.Context;
-import android.text.TextUtils;
-import com.criteo.publisher.Criteo;
+import android.support.annotation.NonNull;
 import com.criteo.publisher.CriteoBannerView;
-import com.criteo.publisher.CriteoInitException;
 import com.criteo.publisher.model.AdSize;
-import com.criteo.publisher.model.AdUnit;
 import com.criteo.publisher.model.BannerAdUnit;
+import com.mopub.common.VisibleForTesting;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.mobileads.CustomEventBanner;
 import com.mopub.mobileads.MoPubErrorCode;
-import java.util.Collections;
 import java.util.Map;
 
 public class CriteoBannerAdapter extends CustomEventBanner {
@@ -27,11 +23,25 @@ public class CriteoBannerAdapter extends CustomEventBanner {
     protected static final String MOPUB_HEIGHT = "com_mopub_ad_height";
     private CriteoBannerView bannerView;
 
+    private final CriteoInitializer criteoInitializer;
+
+    public CriteoBannerAdapter() {
+        this(new CriteoInitializer());
+    }
+
+    @VisibleForTesting
+    CriteoBannerAdapter(@NonNull CriteoInitializer criteoInitializer) {
+        this.criteoInitializer = criteoInitializer;
+    }
+
     @Override
     protected void loadBanner(Context context, CustomEventBannerListener customEventBannerListener,
             Map<String, Object> localExtras, Map<String, String> serverExtras) {
 
-        if (TextUtils.isEmpty(localExtras.toString()) || TextUtils.isEmpty(serverExtras.toString())) {
+        boolean localExtrasEmpty = (localExtras == null) || localExtras.isEmpty();
+        boolean serverExtrasEmpty = (serverExtras == null) || serverExtras.isEmpty();
+
+        if (localExtrasEmpty || serverExtrasEmpty) {
             MoPubLog.log(LOAD_FAILED, TAG, "Server parameters are empty");
             customEventBannerListener.onBannerFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
             return;
@@ -54,11 +64,7 @@ public class CriteoBannerAdapter extends CustomEventBanner {
             return;
         }
 
-        try {
-            Criteo.init((Application) (context.getApplicationContext()), criteoPublisherId,
-                Collections.<AdUnit>emptyList());
-        } catch (CriteoInitException e1) {
-        }
+        criteoInitializer.init(context, criteoPublisherId);
 
         try {
             BannerAdUnit bannerAdUnit = new BannerAdUnit(adUnitId, adSize);
