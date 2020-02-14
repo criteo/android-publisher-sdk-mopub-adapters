@@ -22,7 +22,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.criteo.mediation.mopub</groupId>
   <artifactId>criteo-adapter</artifactId>
-  <version>3.4.0.0</version>
+  <version>3.4.0.1</version>
   <packaging>aar</packaging>
   <description>POM was created from install:install-file</description>
   <dependencies>
