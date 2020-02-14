@@ -9,7 +9,7 @@ import com.criteo.publisher.CriteoInitException;
 import com.mopub.common.MoPub;
 import com.mopub.common.privacy.PersonalInfoManager;
 
-public class CriteoInitializer {
+class CriteoInitializer {
   private final PersonalInfoManager personalInfoManager;
 
   public CriteoInitializer() {
