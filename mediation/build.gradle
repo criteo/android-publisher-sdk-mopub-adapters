@@ -1,7 +1,19 @@
 apply plugin: 'com.android.library'
 apply plugin: 'maven-publish'
 
-def support_version = "27.0.1"
+/**
+ * Current adapter version
+ *
+ * The three first digits correspond to the version of the PublisherSDK that is linked to this adapter.
+ * The last digit is an incremental version of this adapter for this PublisherSDK version.
+ *
+ * This means, that every time a new PublisherSDK is deployed (version A.B.C), then a new adapter should be
+ * deployed as well with version A.B.C.0. If fixes, or updates are required on the adapter without updating
+ * the SDK, then the last digit is incremented to produce A.B.C.1, then A.B.C.2, ...
+ */
+version = "3.4.0.1"
+
+def sdk_version = version.substring(0, version.lastIndexOf('.'))
 
 android {
     buildToolsVersion '27.0.3'
@@ -11,7 +23,7 @@ android {
         minSdkVersion 19
         targetSdkVersion 27
         versionCode 1
-        versionName "1.0.1"
+        versionName "$version"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
@@ -36,38 +48,56 @@ android {
 
 }
 
-repositories {
-    jcenter() // includes the MoPub SDK and AVID library
-    maven { url "https://s3.amazonaws.com/moat-sdk-builds" }
-}
-
 configurations.all {
     resolutionStrategy {
-        force "com.android.support:support-annotations:$support_version"
-        force "com.android.support:support-v4:$support_version"
-        force "com.android.support:asynclayoutinflater:$support_version"
-        force "com.android.support:customtabs:$support_version"
+        force "com.android.support:support-core-utils:27.0.1"
     }
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.google.android.gms:play-services-ads:15.0.0'
+    def useLocalPublisherSdk = false
+    if (useLocalPublisherSdk) {
+        implementation(project(path: ":publisher-sdk-release"))
+    } else {
+        // TODO EE-916 Publish SNAPSHOT release of the SDK and use them as a dependency instead of
+        //  relying on dynamic version.
+        implementation("com.criteo.publisher:criteo-publisher-sdk:$sdk_version-+")
+    }
 
-    implementation project(path: ':publisher-sdk-release')
-    implementation('com.mopub:mopub-sdk-banner:5.6.0@aar') {
+    compileOnly("com.mopub:mopub-sdk-banner:5.6.0@aar") {
+        exclude(group: "com.android.support")
         transitive = true
     }
 
-    // For interstitials
-    implementation('com.mopub:mopub-sdk-interstitial:5.6.0@aar') {
+    compileOnly("com.mopub:mopub-sdk-interstitial:5.6.0@aar") {
+        exclude(group: "com.android.support")
         transitive = true
     }
 
+    testImplementation("junit:junit:4.12")
+    testImplementation("org.mockito:mockito-core:3.2.4")
 
-    testImplementation 'junit:junit:4.12'
-    testImplementation 'org.mockito:mockito-core:3.2.4'
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-    androidTestImplementation 'org.mockito:mockito-android:2.7.22'
+    testImplementation("com.mopub:mopub-sdk-banner:5.6.0@aar") {
+        exclude(group: "com.android.support")
+        transitive = true
+    }
+
+    testImplementation("com.mopub:mopub-sdk-interstitial:5.6.0@aar") {
+        exclude(group: "com.android.support")
+        transitive = true
+    }
+
+    androidTestImplementation("com.android.support.test:runner:1.0.2")
+    androidTestImplementation("com.android.support.test.espresso:espresso-core:3.0.2")
+    androidTestImplementation("org.mockito:mockito-android:2.7.22")
+
+    androidTestImplementation("com.mopub:mopub-sdk-banner:5.6.0@aar") {
+        exclude(group: "com.android.support")
+        transitive = true
+    }
+
+    androidTestImplementation("com.mopub:mopub-sdk-interstitial:5.6.0@aar") {
+        exclude(group: "com.android.support")
+        transitive = true
+    }
 }
