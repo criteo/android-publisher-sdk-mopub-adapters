@@ -102,3 +102,56 @@ dependencies {
         transitive = true
     }
 }
+
+task packageAarRelease(type: Zip, dependsOn: 'bundleRelease') {
+    from file("$buildDir/outputs/aar/mediation-release.aar")
+    extension "aar"
+}
+
+def azureLocalRepository = "${buildDir}/azure-${version}"
+
+publishing {
+    publications {
+        release(MavenPublication) {
+            groupId = "com.criteo.mediation.mopub"
+            artifactId = "criteo-adapter"
+            artifact packageAarRelease
+
+            pom {
+                packaging = "aar"
+
+                withXml {
+                    def dependenciesNode = asNode().appendNode("dependencies")
+
+                    def dependencyNode = dependenciesNode.appendNode("dependency")
+                    dependencyNode.appendNode("groupId", "com.criteo.publisher")
+                    dependencyNode.appendNode("artifactId", "criteo-publisher-sdk")
+                    dependencyNode.appendNode("version", "$sdk_version")
+                    dependencyNode.appendNode("type", "aar")
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            // TODO EE-915 Find a way to make the upload from Gradle rather than relying on bash script
+            name = "azure"
+            url = "file://${azureLocalRepository}"
+        }
+    }
+}
+
+task uploadToAzure {
+    doLast {
+        exec {
+            commandLine "bash", "../scripts/publish-to-azure.sh", "${azureLocalRepository}"
+        }
+    }
+}
+
+tasks.withType(PublishToMavenRepository).all {
+    if (name.contains("Azure")) {
+        it.finalizedBy uploadToAzure
+    }
+}
