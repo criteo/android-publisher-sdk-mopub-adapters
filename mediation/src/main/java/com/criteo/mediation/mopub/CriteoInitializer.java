@@ -3,6 +3,7 @@ package com.criteo.mediation.mopub;
 import android.app.Application;
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import com.criteo.publisher.Criteo;
 import com.criteo.publisher.CriteoInitException;
@@ -10,6 +11,8 @@ import com.mopub.common.MoPub;
 import com.mopub.common.privacy.PersonalInfoManager;
 
 class CriteoInitializer {
+
+  @Nullable
   private final PersonalInfoManager personalInfoManager;
 
   public CriteoInitializer() {
@@ -17,7 +20,7 @@ class CriteoInitializer {
   }
 
   @VisibleForTesting
-  CriteoInitializer(@NonNull PersonalInfoManager personalInfoManager) {
+  CriteoInitializer(@Nullable PersonalInfoManager personalInfoManager) {
     this.personalInfoManager = personalInfoManager;
   }
 
@@ -25,7 +28,12 @@ class CriteoInitializer {
     Criteo.Builder criteoBuilder = getCriteoBuilder(context, criteoPublisherId);
     Criteo criteo = null;
 
-    String consentStatus = personalInfoManager.getPersonalInfoConsentStatus().name();
+    String consentStatus;
+    if (personalInfoManager == null) {
+      consentStatus = null;
+    } else {
+      consentStatus = personalInfoManager.getPersonalInfoConsentStatus().name();
+    }
 
     try {
       criteoBuilder.mopubConsent(consentStatus);

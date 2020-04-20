@@ -1,9 +1,7 @@
 package com.criteo.mediation.mopub;
 
 import static com.mopub.common.privacy.ConsentStatus.EXPLICIT_YES;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
@@ -80,5 +78,22 @@ public class CriteoInitializerTest {
     // then
     verify(criteo, never()).setMopubConsent(anyString());
     verify(criteoBuilder).mopubConsent(EXPLICIT_YES.name());
+  }
+
+  @Test
+  public void testInit_GivenNullPersonalInfoManager_ItShouldNotCrash() throws Exception {
+    // given
+    personalInfoManager = null;
+    criteoInitializer = spy(new CriteoInitializer(personalInfoManager));
+    String publisherId = "fake_publisher_id";
+    when(criteoBuilder.init()).thenReturn(criteo);
+    doReturn(criteoBuilder).when(criteoInitializer).getCriteoBuilder(context, publisherId);
+
+    // when
+    criteoInitializer.init(context, publisherId);
+
+    // then
+    verify(criteo).setMopubConsent(null);
+    verify(criteoBuilder).mopubConsent(null);
   }
 }
