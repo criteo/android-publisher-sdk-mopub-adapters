@@ -90,6 +90,9 @@ dependencies {
     androidTestImplementation("org.mockito:mockito-android:2.7.22")
     androidTestImplementation("com.android.support:support-core-utils:$support_version")
 
+    /** Needed to retrieve the device ID */
+    androidTestImplementation("com.google.android.gms:play-services-ads:15.0.0")
+
     androidTestImplementation("com.mopub:mopub-sdk-banner:5.6.0@aar") {
         exclude(group: "com.android.support")
         transitive = true
