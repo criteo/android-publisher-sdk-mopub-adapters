@@ -97,7 +97,7 @@ task packageAarRelease(type: Zip, dependsOn: 'bundleRelease') {
     extension "aar"
 }
 
-def azureLocalRepository = "${buildDir}/azure-${version}"
+def azureLocalRepository = "${buildDir}/azure-${adapter_publication_version}"
 
 publishing {
     publications {
