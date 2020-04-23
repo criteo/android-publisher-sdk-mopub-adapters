@@ -1,149 +1,110 @@
 package com.criteo.mediation.mopub;
 
+import static com.criteo.mediation.mopub.MoPubHelper.serverExtras;
+import static com.criteo.publisher.CriteoUtil.clearCriteo;
+import static com.criteo.publisher.CriteoUtil.givenInitializedCriteo;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
-import android.app.Application;
 import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.runner.AndroidJUnit4;
-import com.criteo.publisher.Criteo;
-import com.criteo.publisher.model.AdUnit;
-import com.mopub.mobileads.CustomEventInterstitial;
+import com.criteo.publisher.TestAdUnits;
+import com.criteo.publisher.mock.MockedDependenciesRule;
+import com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
 import com.mopub.mobileads.MoPubErrorCode;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CyclicBarrier;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.InOrder;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
-@RunWith(AndroidJUnit4.class)
 public class CriteoMopubInterstitialAdapterTest {
 
-    private static final String BANNER_ADUNIT_ID = "86c36b6223ce4730acf52323de3baa93";
-    private static final String ADUNIT_ID = "adUnitId";
-    private static final String CRITEO_PUBLISHER_ID = "cpId";
-    private static final String MOPUB_WIDTH = "com_mopub_ad_width";
-    private static final String MOPUB_HEIGHT = "com_mopub_ad_height";
-
-    private static final String TEST_ID = "6yws53jyfjgoq1ghnuqb";
-    private static final String CP_ID = "B-056946";
+    @Rule
+    public MockedDependenciesRule mockedDependenciesRule = new MockedDependenciesRule();
 
     private Context context;
-    private Map<String, Object> localExtras;
-    private Map<String, String> serverExtras;
-    private CriteoInterstitialAdapter criteoMopubInterstitialAdapter;
+
+    private final Map<String, Object> localExtras = new HashMap<>();
 
     @Mock
-    private CustomEventInterstitial.CustomEventInterstitialListener customEventInterstitialListener;
+    private CustomEventInterstitialListener listener;
+
+    private CriteoInterstitialAdapter adapter;
+    private InterstitialAdapterHelper adapterHelper;
 
     @Before
-    public void setUp(){
-        context = InstrumentationRegistry.getContext();
+    public void setUp() {
         MockitoAnnotations.initMocks(this);
-        localExtras = new HashMap<String, Object>();
-        serverExtras = new HashMap<String, String>();
-        criteoMopubInterstitialAdapter = new CriteoInterstitialAdapter();
+        clearCriteo();
+
+        context = InstrumentationRegistry.getContext();
+
+        adapter = new CriteoInterstitialAdapter();
+        adapterHelper = new InterstitialAdapterHelper(adapter);
     }
 
-    // serverExtras and localExtras are empty
     @Test
     public void requestInterstitialAdWithEmptyParameters() {
+        Map<String, String> serverExtras = new HashMap<>();
 
-        criteoMopubInterstitialAdapter.loadInterstitial(context, customEventInterstitialListener, localExtras, serverExtras);
+        adapter.loadInterstitial(context, listener, localExtras, serverExtras);
 
-        Mockito.verify(customEventInterstitialListener, Mockito.times(1))
-                .onInterstitialFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
-        Mockito.verify(customEventInterstitialListener, Mockito.times(0))
-                .onInterstitialFailed(MoPubErrorCode.MISSING_AD_UNIT_ID);
+        verify(listener).onInterstitialFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
+        verifyNoMoreInteractions(listener);
     }
 
     @Test
     public void requestInterstitialAdWithNullPublisherId() {
-        serverExtras.put(ADUNIT_ID, BANNER_ADUNIT_ID);
+        Map<String, String> serverExtras = serverExtras(null, "myAdUnit");
 
-        criteoMopubInterstitialAdapter.loadInterstitial(context, customEventInterstitialListener, localExtras, serverExtras);
-        Mockito.verify(customEventInterstitialListener, Mockito.times(1))
-                .onInterstitialFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
-        Mockito.verify(customEventInterstitialListener, Mockito.times(0))
-                .onInterstitialFailed(MoPubErrorCode.MISSING_AD_UNIT_ID);
+        adapter.loadInterstitial(context, listener, localExtras, serverExtras);
+
+        verify(listener).onInterstitialFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
+        verifyNoMoreInteractions(listener);
     }
 
     @Test
     public void requestBannerAdWithNullAdUnitId() {
-        serverExtras.put(CRITEO_PUBLISHER_ID, "123");
+        Map<String, String> serverExtras = serverExtras("cpId", null);
 
-        criteoMopubInterstitialAdapter.loadInterstitial(context, customEventInterstitialListener, localExtras, serverExtras);
-        Mockito.verify(customEventInterstitialListener, Mockito.times(0))
-                .onInterstitialFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
-        Mockito.verify(customEventInterstitialListener, Mockito.times(1))
-                .onInterstitialFailed(MoPubErrorCode.MISSING_AD_UNIT_ID);
+        adapter.loadInterstitial(context, listener, localExtras, serverExtras);
+
+        verify(listener).onInterstitialFailed(MoPubErrorCode.MISSING_AD_UNIT_ID);
+        verifyNoMoreInteractions(listener);
     }
 
     @Test
     public void givenNotInitializedCriteo_WhenLoadingInterstitialTwice_MissFirstOpportunityBecauseOfBidCachingAndSucceedOnNextOne() throws Exception {
-        CriteoHelper.givenNotInitializedCriteo();
-
-        whenLoadingInterstitialTwice();
+        loadValidInterstitial();
+        loadValidInterstitial();
 
         checkMissFirstOpportunityBecauseOfBidCachingAndSucceedOnNextOne();
     }
 
     @Test
     public void givenInitializedCriteo_WhenLoadingInterstitialTwice_MissFirstOpportunityBecauseOfBidCachingAndSucceedOnNextOne() throws Exception {
-        // Clean the cache state first.
-        // TODO: To make all tests independent, we could place this @Before every tests.
-        CriteoHelper.givenNotInitializedCriteo();
+        givenInitializedCriteo();
 
-        Criteo.init((Application) context.getApplicationContext(), CP_ID, Collections.<AdUnit>emptyList());
-
-        whenLoadingInterstitialTwice();
+        loadValidInterstitial();
+        loadValidInterstitial();
 
         checkMissFirstOpportunityBecauseOfBidCachingAndSucceedOnNextOne();
     }
 
-    private void whenLoadingInterstitialTwice() throws Exception {
-        serverExtras.put(CRITEO_PUBLISHER_ID, CP_ID);
-        serverExtras.put(ADUNIT_ID, TEST_ID);
-
-        final CyclicBarrier latch = new CyclicBarrier(2);
-
-        Runnable loadBanner = new Runnable() {
-            @Override
-            public void run() {
-                criteoMopubInterstitialAdapter.loadInterstitial(context, customEventInterstitialListener, localExtras, serverExtras);
-
-                try {
-                    latch.await();
-                } catch (InterruptedException | BrokenBarrierException e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-
-        final Handler handler = new Handler(Looper.getMainLooper());
-
-        handler.post(loadBanner);
-        latch.await();
-        Thread.sleep(5000);
-
-        handler.post(loadBanner);
-        latch.await();
-        Thread.sleep(2000);
+    private void loadValidInterstitial() {
+        adapterHelper.loadInterstitial(TestAdUnits.INTERSTITIAL, listener);
+        mockedDependenciesRule.waitForIdleState();
     }
 
     private void checkMissFirstOpportunityBecauseOfBidCachingAndSucceedOnNextOne() {
-        InOrder inOrder = inOrder(customEventInterstitialListener);
-        inOrder.verify(customEventInterstitialListener).onInterstitialFailed(MoPubErrorCode.NETWORK_NO_FILL);
-        inOrder.verify(customEventInterstitialListener).onInterstitialLoaded();
+        InOrder inOrder = inOrder(listener);
+        inOrder.verify(listener).onInterstitialFailed(MoPubErrorCode.NETWORK_NO_FILL);
+        inOrder.verify(listener).onInterstitialLoaded();
         inOrder.verifyNoMoreInteractions();
     }
 
