@@ -76,7 +76,9 @@ dependencies {
     androidTestImplementation("com.android.support.test.espresso:espresso-core:3.0.2")
     androidTestImplementation("org.mockito:mockito-android:2.7.22")
     androidTestImplementation("com.android.support:support-core-utils:$support_version")
-    androidTestImplementation("com.criteo.publisher:criteo-publisher-sdk-test-utils:$sdk_version+")
+    androidTestImplementation("com.criteo.publisher:criteo-publisher-sdk-test-utils:$sdk_version+") {
+        exclude(group: "com.android.support")
+    }
 
     /** Needed to retrieve the device ID */
     androidTestImplementation("com.google.android.gms:play-services-ads:15.0.0")
