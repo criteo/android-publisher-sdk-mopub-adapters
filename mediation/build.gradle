@@ -10,6 +10,7 @@ android {
         targetSdkVersion 27
         versionCode 1
         versionName "$adapter_version"
+        multiDexEnabled true
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
@@ -56,6 +57,8 @@ dependencies {
     compileOnly("com.mopub:mopub-sdk-interstitial:5.6.0@aar") {
         transitive = true
     }
+
+    implementation 'com.android.support:multidex:1.0.3'
 
     testImplementation("junit:junit:4.12")
     testImplementation("org.mockito:mockito-core:3.2.4")
