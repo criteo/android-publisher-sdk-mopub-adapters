@@ -5,8 +5,8 @@ import static com.criteo.publisher.CriteoUtil.TEST_CP_ID;
 import static com.criteo.publisher.concurrent.ThreadingUtil.runOnMainThreadAndWait;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.test.InstrumentationRegistry;
+import androidx.annotation.NonNull;
+import androidx.test.core.app.ApplicationProvider;
 import com.criteo.publisher.model.InterstitialAdUnit;
 import com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
 import java.util.HashMap;
@@ -18,7 +18,7 @@ public class InterstitialAdapterHelper {
   private final CriteoInterstitialAdapter adapter;
 
   @NonNull
-  private final Context context = InstrumentationRegistry.getContext();
+  private final Context context = ApplicationProvider.getApplicationContext();
 
   public InterstitialAdapterHelper(@NonNull CriteoInterstitialAdapter adapter) {
     this.adapter = adapter;

@@ -10,7 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import android.content.Context;
-import android.support.test.InstrumentationRegistry;
+import androidx.test.core.app.ApplicationProvider;
 import com.criteo.publisher.CriteoBannerView;
 import com.criteo.publisher.TestAdUnits;
 import com.criteo.publisher.mock.MockedDependenciesRule;
@@ -43,7 +43,7 @@ public class CriteoMopubBannerAdapterTest {
         MockitoAnnotations.initMocks(this);
         clearCriteo();
 
-        context = InstrumentationRegistry.getContext();
+        context = ApplicationProvider.getApplicationContext();
 
         adapter = new CriteoBannerAdapter();
         adapterHelper = new BannerAdapterHelper(adapter);

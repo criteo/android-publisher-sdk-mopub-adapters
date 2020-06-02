@@ -8,7 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import android.content.Context;
-import android.support.test.InstrumentationRegistry;
+import androidx.test.core.app.ApplicationProvider;
 import com.criteo.publisher.TestAdUnits;
 import com.criteo.publisher.mock.MockedDependenciesRule;
 import com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
@@ -42,7 +42,7 @@ public class CriteoMopubInterstitialAdapterTest {
         MockitoAnnotations.initMocks(this);
         clearCriteo();
 
-        context = InstrumentationRegistry.getContext();
+        context = ApplicationProvider.getApplicationContext();
 
         adapter = new CriteoInterstitialAdapter();
         adapterHelper = new InterstitialAdapterHelper(adapter);
