@@ -48,31 +48,31 @@ dependencies {
 
     compileOnly("androidx.annotation:annotation:1.0.0")
 
-    compileOnly("com.mopub:mopub-sdk-banner:5.6.0@aar") {
+    compileOnly("com.mopub:mopub-sdk-banner:5.10.0@aar") {
         transitive = true
     }
 
-    compileOnly("com.mopub:mopub-sdk-interstitial:5.6.0@aar") {
+    compileOnly("com.mopub:mopub-sdk-interstitial:5.10.0@aar") {
         transitive = true
     }
 
     implementation("androidx.multidex:multidex:2.0.1")
 
-    testImplementation("junit:junit:4.12")
-    testImplementation("org.mockito:mockito-core:3.2.4")
+    testImplementation("junit:junit:4.13")
+    testImplementation("org.mockito:mockito-core:3.3.0")
     testImplementation("androidx.legacy:legacy-support-core-utils:1.0.0")
     testImplementation("com.criteo.publisher:criteo-publisher-sdk-test-utils:$sdk_version+")
 
-    testImplementation("com.mopub:mopub-sdk-banner:5.6.0@aar") {
+    testImplementation("com.mopub:mopub-sdk-banner:5.10.0@aar") {
         transitive = true
     }
 
-    testImplementation("com.mopub:mopub-sdk-interstitial:5.6.0@aar") {
+    testImplementation("com.mopub:mopub-sdk-interstitial:5.10.0@aar") {
         transitive = true
     }
 
     androidTestImplementation("androidx.test:runner:1.2.0")
-    androidTestImplementation("androidx.test:core:1.0.0")
+    androidTestImplementation("androidx.test:core:1.2.0")
     androidTestImplementation("androidx.legacy:legacy-support-core-utils:1.0.0")
 
     androidTestImplementation("org.mockito:mockito-android:3.3.0")
@@ -80,13 +80,13 @@ dependencies {
     androidTestImplementation("com.criteo.publisher:criteo-publisher-sdk-test-utils:$sdk_version+")
 
     /** Needed to retrieve the device ID */
-    androidTestImplementation("com.google.android.gms:play-services-ads:15.0.0")
+    androidTestImplementation("com.google.android.gms:play-services-ads:19.1.0")
 
-    androidTestImplementation("com.mopub:mopub-sdk-banner:5.6.0@aar") {
+    androidTestImplementation("com.mopub:mopub-sdk-banner:5.10.0@aar") {
         transitive = true
     }
 
-    androidTestImplementation("com.mopub:mopub-sdk-interstitial:5.6.0@aar") {
+    androidTestImplementation("com.mopub:mopub-sdk-interstitial:5.10.0@aar") {
         transitive = true
     }
 }
@@ -103,7 +103,6 @@ publishing {
                 afterEvaluate {
                     builtBy(tasks["bundleReleaseAar"])
                 }
-
             }
 
             pom {
