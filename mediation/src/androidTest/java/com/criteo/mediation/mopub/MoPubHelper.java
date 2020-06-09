@@ -5,8 +5,8 @@ import java.util.Map;
 
 public class MoPubHelper {
 
-  private static final String ADUNIT_ID = "adUnitId";
-  private static final String CRITEO_PUBLISHER_ID = "cpId";
+  public static final String ADUNIT_ID = "adUnitId";
+  public static final String CRITEO_PUBLISHER_ID = "cpId";
   private static final String MOPUB_WIDTH = "com_mopub_ad_width";
   private static final String MOPUB_HEIGHT = "com_mopub_ad_height";
 

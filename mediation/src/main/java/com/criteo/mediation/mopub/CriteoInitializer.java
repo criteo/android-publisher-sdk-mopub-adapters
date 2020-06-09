@@ -10,7 +10,7 @@ import com.criteo.publisher.CriteoInitException;
 import com.mopub.common.MoPub;
 import com.mopub.common.privacy.PersonalInfoManager;
 
-class CriteoInitializer {
+public class CriteoInitializer {
 
   @Nullable
   private final PersonalInfoManager personalInfoManager;
