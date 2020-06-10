@@ -22,7 +22,9 @@ import com.criteo.publisher.CriteoUtil.TEST_CP_ID
 import com.criteo.publisher.CriteoUtil.givenInitializedCriteo
 import com.criteo.publisher.StubConstants
 import com.criteo.publisher.TestAdUnits
+import com.criteo.publisher.advancednative.AdChoiceOverlay
 import com.criteo.publisher.advancednative.CriteoMediaView
+import com.criteo.publisher.advancednative.adChoiceView
 import com.criteo.publisher.advancednative.drawable
 import com.criteo.publisher.adview.Redirection
 import com.criteo.publisher.concurrent.ThreadingUtil.runOnMainThreadAndWait
@@ -72,6 +74,9 @@ class CriteoNativeAdapterTest {
   @MockBean
   private lateinit var redirection: Redirection
 
+  @Inject
+  private lateinit var adChoiceOverlay: AdChoiceOverlay
+
   @Mock
   private lateinit var nativeNetworkListener: MoPubNativeNetworkListener
 
@@ -118,13 +123,16 @@ class CriteoNativeAdapterTest {
     assertThat(adView.findDrawableWithTag(PRODUCT_IMAGE_TAG)).isNotNull.isNotEqualTo(placeholder)
     assertThat(adView.findDrawableWithTag(ADVERTISER_LOGO_TAG)).isEqualTo(placeholder)
 
-    // TODO AdChoice
+    // AdChoice
+    val adChoiceView = adChoiceOverlay.adChoiceView(adView)!!
+    assertThat(adChoiceView.drawable).isNotNull
 
     // Impression
     adView.assertDisplayTriggerImpressionPixels(expectedAssets.impressionPixels)
 
     // Click
-    adView.assertClickRedirectTo(expectedProduct.clickUrl)
+    adView.assertClickRedirectTo(expectedProduct.clickUrl, true)
+    adChoiceView.assertClickRedirectTo(expectedAssets.privacyOptOutClickUrl, false)
   }
 
   @Test
@@ -200,7 +208,10 @@ class CriteoNativeAdapterTest {
     }
   }
 
-  private fun View.assertClickRedirectTo(expectedRedirectionUri: URI) {
+  private fun View.assertClickRedirectTo(
+      expectedRedirectionUri: URI,
+      notifyMoPubListener: Boolean
+  ) {
     clearInvocations(redirection)
     clearInvocations(nativeEventListener)
 
@@ -221,7 +232,8 @@ class CriteoNativeAdapterTest {
         any()
     )
 
-    verify(nativeEventListener).onClick(anyOrNull())
+    val quantifier = if (notifyMoPubListener) times(1) else never()
+    verify(nativeEventListener, quantifier).onClick(anyOrNull())
   }
 
 }

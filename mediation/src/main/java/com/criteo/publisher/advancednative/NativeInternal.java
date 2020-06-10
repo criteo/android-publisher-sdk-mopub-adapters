@@ -23,8 +23,7 @@ public class NativeInternal {
   }
 
   public static CriteoNativeRenderer decorateWithAdChoice(@NonNull CriteoNativeRenderer delegate) {
-    // TODO Encapsulate in AdChoiceOverlayNativeRenderer
-    return delegate;
+    return new AdChoiceOverlayNativeRenderer(delegate);
   }
 
   public static void setRenderer(
