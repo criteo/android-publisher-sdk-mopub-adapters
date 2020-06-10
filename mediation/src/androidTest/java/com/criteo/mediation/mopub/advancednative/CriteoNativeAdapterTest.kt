@@ -1,5 +1,6 @@
 package com.criteo.mediation.mopub.advancednative
 
+import android.content.ComponentName
 import android.content.Context
 import android.graphics.drawable.Drawable
 import android.view.View
@@ -23,7 +24,9 @@ import com.criteo.publisher.StubConstants
 import com.criteo.publisher.TestAdUnits
 import com.criteo.publisher.advancednative.CriteoMediaView
 import com.criteo.publisher.advancednative.drawable
+import com.criteo.publisher.adview.Redirection
 import com.criteo.publisher.concurrent.ThreadingUtil.runOnMainThreadAndWait
+import com.criteo.publisher.mock.MockBean
 import com.criteo.publisher.mock.MockedDependenciesRule
 import com.criteo.publisher.mock.SpyBean
 import com.criteo.publisher.model.NativeAdUnit
@@ -42,6 +45,7 @@ import org.mockito.Mock
 import org.mockito.junit.MockitoJUnit
 import org.mockito.junit.MockitoRule
 import java.net.URL
+import java.net.URI
 import javax.inject.Inject
 
 class CriteoNativeAdapterTest {
@@ -63,6 +67,9 @@ class CriteoNativeAdapterTest {
 
   @SpyBean
   private lateinit var api: PubSdkApi
+
+  @MockBean
+  private lateinit var redirection: Redirection
 
   @Mock
   private lateinit var nativeNetworkListener: MoPubNativeNetworkListener
@@ -114,9 +121,10 @@ class CriteoNativeAdapterTest {
 
     // Impression
     adView.assertDisplayTriggerImpressionPixels(expectedAssets.impressionPixels)
-  }
 
-  // TODO Click
+    // Click
+    adView.assertClickRedirectTo(expectedProduct.clickUrl)
+  }
 
   private fun givenMoPubResponseForCriteoAdapter(adUnit: NativeAdUnit): AdResponse {
     return AdResponse.Builder()
@@ -168,6 +176,30 @@ class CriteoNativeAdapterTest {
     expectedPixels.forEach {
       verify(api).executeRawGet(it)
     }
+  }
+
+  private fun View.assertClickRedirectTo(expectedRedirectionUri: URI) {
+    clearInvocations(redirection)
+    clearInvocations(nativeEventListener)
+
+    runOnMainThreadAndWait {
+      performClick()
+    }
+
+    mockedDependenciesRule.waitForIdleState()
+
+    var expectedComponentName: ComponentName? = null
+    scenarioRule.scenario.onActivity {
+      expectedComponentName = it.componentName
+    }
+
+    verify(redirection).redirect(
+        eq(expectedRedirectionUri.toString()),
+        eq(expectedComponentName),
+        any()
+    )
+
+    verify(nativeEventListener).onClick(anyOrNull())
   }
 
 }
