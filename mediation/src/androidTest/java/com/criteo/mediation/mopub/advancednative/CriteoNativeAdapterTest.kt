@@ -5,6 +5,8 @@ import android.graphics.drawable.Drawable
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.test.ext.junit.rules.ActivityScenarioRule
+import com.criteo.media.mopub.activity.DummyActivity
 import com.criteo.mediation.mopub.MoPubHelper.ADUNIT_ID
 import com.criteo.mediation.mopub.MoPubHelper.CRITEO_PUBLISHER_ID
 import com.criteo.mediation.mopub.advancednative.TestNativeRenderer.Companion.ADVERTISER_DESCRIPTION_TAG
@@ -23,15 +25,23 @@ import com.criteo.publisher.advancednative.CriteoMediaView
 import com.criteo.publisher.advancednative.drawable
 import com.criteo.publisher.concurrent.ThreadingUtil.runOnMainThreadAndWait
 import com.criteo.publisher.mock.MockedDependenciesRule
+import com.criteo.publisher.mock.SpyBean
+import com.criteo.publisher.model.NativeAdUnit
+import com.criteo.publisher.network.PubSdkApi
 import com.mopub.nativeads.AdapterHelper
 import com.mopub.nativeads.MoPubNative
 import com.mopub.nativeads.MoPubNative.MoPubNativeNetworkListener
 import com.mopub.nativeads.NativeAd
+import com.mopub.nativeads.NativeAd.MoPubNativeEventListener
 import com.mopub.network.AdResponse
 import com.nhaarman.mockitokotlin2.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.Mock
+import org.mockito.junit.MockitoJUnit
+import org.mockito.junit.MockitoRule
+import java.net.URL
 import javax.inject.Inject
 
 class CriteoNativeAdapterTest {
@@ -40,8 +50,25 @@ class CriteoNativeAdapterTest {
   @JvmField
   val mockedDependenciesRule = MockedDependenciesRule()
 
+  @Rule
+  @JvmField
+  var scenarioRule: ActivityScenarioRule<DummyActivity> = ActivityScenarioRule(DummyActivity::class.java)
+
+  @Rule
+  @JvmField
+  var mockitoRule: MockitoRule = MockitoJUnit.rule()
+
   @Inject
   private lateinit var context: Context
+
+  @SpyBean
+  private lateinit var api: PubSdkApi
+
+  @Mock
+  private lateinit var nativeNetworkListener: MoPubNativeNetworkListener
+
+  @Mock
+  private lateinit var nativeEventListener: MoPubNativeEventListener
 
   @Test
   fun loadNativeAd_GivenValidBid_RenderAllNativePayload() {
@@ -52,15 +79,7 @@ class CriteoNativeAdapterTest {
     val parentView = mock<ViewGroup>()
     val placeholder = context.getDrawable(android.R.drawable.ic_delete)!!
     val nativeRenderer = spy(TestNativeRenderer(placeholder))
-    val nativeNetworkListener = mock<MoPubNativeNetworkListener>()
-
-    val adResponse = AdResponse.Builder()
-        .setCustomEventClassName("com.criteo.mediation.mopub.advancednative.CriteoNativeAdapter")
-        .setServerExtras(mapOf(
-            CRITEO_PUBLISHER_ID to TEST_CP_ID,
-            ADUNIT_ID to adUnit.adUnitId
-        ))
-        .build()
+    val adResponse = givenMoPubResponseForCriteoAdapter(adUnit)
 
     // When
     givenInitializedCriteo(adUnit)
@@ -74,6 +93,7 @@ class CriteoNativeAdapterTest {
 
     // Then
     val nativeAd = nativeNetworkListener.lastNativeAd()
+    nativeAd.setMoPubNativeEventListener(nativeEventListener)
     val adView = nativeAd.getAdView(parentView)
 
     verify(nativeRenderer).createNativeView(context, parentView)
@@ -91,10 +111,22 @@ class CriteoNativeAdapterTest {
     assertThat(adView.findDrawableWithTag(ADVERTISER_LOGO_TAG)).isEqualTo(placeholder)
 
     // TODO AdChoice
+
+    // Impression
+    adView.assertDisplayTriggerImpressionPixels(expectedAssets.impressionPixels)
   }
 
   // TODO Click
-  // TODO Impression
+
+  private fun givenMoPubResponseForCriteoAdapter(adUnit: NativeAdUnit): AdResponse {
+    return AdResponse.Builder()
+        .setCustomEventClassName("com.criteo.mediation.mopub.advancednative.CriteoNativeAdapter")
+        .setServerExtras(mapOf(
+            CRITEO_PUBLISHER_ID to TEST_CP_ID,
+            ADUNIT_ID to adUnit.adUnitId
+        ))
+        .build()
+  }
 
   private fun MoPubNative.loadAd(adResponse: AdResponse) {
     val method = javaClass.getDeclaredMethod("onAdLoad", AdResponse::class.java)
@@ -121,6 +153,21 @@ class CriteoNativeAdapterTest {
 
   private fun View.findDrawableWithTag(tag: Any): Drawable {
     return findViewWithTag<CriteoMediaView>(tag).drawable
+  }
+
+  private fun View.assertDisplayTriggerImpressionPixels(expectedPixels: List<URL>) {
+    clearInvocations(nativeEventListener)
+
+    scenarioRule.scenario.onActivity {
+      it.setContentView(this)
+    }
+    mockedDependenciesRule.waitForIdleState()
+
+    verify(nativeEventListener).onImpression(anyOrNull())
+
+    expectedPixels.forEach {
+      verify(api).executeRawGet(it)
+    }
   }
 
 }

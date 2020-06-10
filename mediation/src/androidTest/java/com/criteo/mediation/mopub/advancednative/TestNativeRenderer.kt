@@ -6,12 +6,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
-import com.criteo.publisher.advancednative.CriteoMediaView
-import com.criteo.publisher.advancednative.CriteoNativeAd
-import com.criteo.publisher.advancednative.CriteoNativeRenderer
-import com.criteo.publisher.advancednative.RendererHelper
+import com.criteo.publisher.advancednative.*
 
-open class TestNativeRenderer(private val placeholder: Drawable) : CriteoNativeRenderer {
+open class TestNativeRenderer(private val placeholder: Drawable? = null) : CriteoNativeRenderer {
 
   companion object {
     val TITLE_TAG = Any()
@@ -50,12 +47,16 @@ open class TestNativeRenderer(private val placeholder: Drawable) : CriteoNativeR
     (layout.getChildAt(1) as TextView).text = nativeAd.description
     (layout.getChildAt(2) as TextView).text = nativeAd.price
     (layout.getChildAt(3) as TextView).text = nativeAd.callToAction
-    (layout.getChildAt(4) as CriteoMediaView).setPlaceholder(placeholder)
-    helper.setMediaInView(nativeAd.productMedia, layout.getChildAt(4) as CriteoMediaView)
+    helper.setMediaInViewWithPlaceholder(
+        nativeAd.productMedia,
+        layout.getChildAt(4) as CriteoMediaView
+    )
     (layout.getChildAt(5) as TextView).text = nativeAd.advertiserDomain
     (layout.getChildAt(6) as TextView).text = nativeAd.advertiserDescription
-    (layout.getChildAt(7) as CriteoMediaView).setPlaceholder(placeholder)
-    helper.setMediaInView(nativeAd.advertiserLogoMedia, layout.getChildAt(7) as CriteoMediaView)
+    helper.setMediaInViewWithPlaceholder(
+        nativeAd.advertiserLogoMedia,
+        layout.getChildAt(7) as CriteoMediaView
+    )
   }
 
   private fun createTextView(context: Context, tag: Any): TextView {
@@ -68,5 +69,15 @@ open class TestNativeRenderer(private val placeholder: Drawable) : CriteoNativeR
     val view = CriteoMediaView(context)
     view.tag = tag
     return view
+  }
+
+  private fun RendererHelper.setMediaInViewWithPlaceholder(
+      mediaContent: CriteoMedia,
+      mediaView: CriteoMediaView
+  ) {
+    if (placeholder != null) {
+      mediaView.setPlaceholder(placeholder)
+    }
+    setMediaInView(mediaContent, mediaView)
   }
 }
