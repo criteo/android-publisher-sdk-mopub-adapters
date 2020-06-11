@@ -4,7 +4,6 @@ import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
-import java.lang.reflect.Field;
 
 public class NativeInternal {
 
@@ -29,13 +28,7 @@ public class NativeInternal {
   public static void setRenderer(
       @NonNull CriteoNativeAd nativeAd,
       @NonNull CriteoNativeRenderer renderer) {
-    // FIXME This works but it is ugly. It may be preferable to just provide a setRenderer method
-    try {
-      Field field = nativeAd.getClass().getDeclaredField("renderer");
-      field.setAccessible(true);
-      field.set(nativeAd, renderer);
-    } catch (Exception ignored) {
-    }
+    nativeAd.setRenderer(renderer);
   }
 
 }
