@@ -36,6 +36,7 @@ import com.mopub.nativeads.MoPubNative
 import com.mopub.nativeads.MoPubNative.MoPubNativeNetworkListener
 import com.mopub.nativeads.NativeAd
 import com.mopub.nativeads.NativeAd.MoPubNativeEventListener
+import com.mopub.nativeads.NativeErrorCode
 import com.mopub.network.AdResponse
 import com.nhaarman.mockitokotlin2.*
 import org.assertj.core.api.Assertions.assertThat
@@ -44,8 +45,8 @@ import org.junit.Test
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnit
 import org.mockito.junit.MockitoRule
-import java.net.URL
 import java.net.URI
+import java.net.URL
 import javax.inject.Inject
 
 class CriteoNativeAdapterTest {
@@ -124,6 +125,27 @@ class CriteoNativeAdapterTest {
 
     // Click
     adView.assertClickRedirectTo(expectedProduct.clickUrl)
+  }
+
+  @Test
+  fun loadNativeAd_GivenInvalidBid_NotifyMoPubForFailure() {
+    // Given
+    val adUnit = TestAdUnits.NATIVE_UNKNOWN
+    val nativeRenderer = TestNativeRenderer()
+    val adResponse = givenMoPubResponseForCriteoAdapter(adUnit)
+
+    // When
+    givenInitializedCriteo(adUnit)
+    mockedDependenciesRule.waitForIdleState()
+
+    val nativeEventRenderer = CriteoNativeEventRenderer(nativeRenderer)
+    val moPubNative = MoPubNative(context, adUnit.adUnitId, nativeNetworkListener)
+    moPubNative.registerAdRenderer(nativeEventRenderer)
+    moPubNative.loadAd(adResponse)
+    mockedDependenciesRule.waitForIdleState()
+
+    // Then
+    verify(nativeNetworkListener).onNativeFail(NativeErrorCode.NETWORK_NO_FILL)
   }
 
   private fun givenMoPubResponseForCriteoAdapter(adUnit: NativeAdUnit): AdResponse {
