@@ -9,6 +9,6 @@
       android:name="com.google.android.gms.ads.AD_MANAGER_APP"
       android:value="true"/>
 
-    <activity android:name="com.criteo.media.mopub.activity.DummyActivity"/>
+    <activity android:name="com.criteo.mediation.mopub.activity.DummyActivity"/>
   </application>
 </manifest>

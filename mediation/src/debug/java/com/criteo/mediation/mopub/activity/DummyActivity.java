@@ -1,4 +1,4 @@
-package com.criteo.media.mopub.activity;
+package com.criteo.mediation.mopub.activity;
 
 import android.app.Activity;
 

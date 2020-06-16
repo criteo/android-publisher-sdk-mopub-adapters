@@ -7,9 +7,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.test.ext.junit.rules.ActivityScenarioRule
-import com.criteo.media.mopub.activity.DummyActivity
 import com.criteo.mediation.mopub.MoPubHelper.ADUNIT_ID
 import com.criteo.mediation.mopub.MoPubHelper.CRITEO_PUBLISHER_ID
+import com.criteo.mediation.mopub.activity.DummyActivity
 import com.criteo.mediation.mopub.advancednative.TestNativeRenderer.Companion.ADVERTISER_DESCRIPTION_TAG
 import com.criteo.mediation.mopub.advancednative.TestNativeRenderer.Companion.ADVERTISER_DOMAIN_TAG
 import com.criteo.mediation.mopub.advancednative.TestNativeRenderer.Companion.ADVERTISER_LOGO_TAG
