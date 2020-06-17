@@ -8,7 +8,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.criteo.publisher.advancednative.CriteoNativeAd;
 import com.criteo.publisher.advancednative.CriteoNativeRenderer;
-import com.criteo.publisher.advancednative.NativeInternal;
+import com.criteo.publisher.advancednative.NativeInternalForMoPub;
 import com.mopub.nativeads.BaseNativeAd;
 import com.mopub.nativeads.MoPubAdRenderer;
 
@@ -19,7 +19,7 @@ public class CriteoNativeEventRenderer implements MoPubAdRenderer<CriteoBaseNati
   private final CriteoNativeRenderer renderer;
 
   public CriteoNativeEventRenderer(@NonNull CriteoNativeRenderer renderer) {
-    this.renderer = NativeInternal.decorateWithAdChoice(renderer);
+    this.renderer = NativeInternalForMoPub.decorateWithAdChoice(renderer);
   }
 
   @NonNull
@@ -31,7 +31,7 @@ public class CriteoNativeEventRenderer implements MoPubAdRenderer<CriteoBaseNati
   @Override
   public void renderAdView(@NonNull View view, @NonNull CriteoBaseNativeAd baseNativeAd) {
     CriteoNativeAd criteoNativeAd = baseNativeAd.getNativeAd();
-    NativeInternal.setRenderer(criteoNativeAd, renderer);
+    NativeInternalForMoPub.setRenderer(criteoNativeAd, renderer);
     criteoNativeAd.renderNativeView(view);
   }
 

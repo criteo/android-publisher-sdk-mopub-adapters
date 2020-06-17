@@ -5,7 +5,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 
-public class NativeInternal {
+public class NativeInternalForMoPub {
 
   /**
    * This class serves as a bridge between this adapter and the internals (package-private) of the
@@ -17,7 +17,7 @@ public class NativeInternal {
    */
   @Keep
   @RestrictTo(Scope.LIBRARY)
-  public NativeInternal() {
+  public NativeInternalForMoPub() {
     // no-op
   }
 
