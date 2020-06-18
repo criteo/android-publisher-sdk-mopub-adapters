@@ -24,7 +24,7 @@ class CriteoNativeEventListener extends CriteoNativeAdListener {
 
   @Override
   public void onAdReceived(@NonNull CriteoNativeAd nativeAd) {
-    baseNativeAd = new CriteoBaseNativeAd(nativeAd);
+    baseNativeAd = new CriteoBaseNativeAd(nativeAd, this);
     customEventNativeListener.onNativeAdLoaded(baseNativeAd);
   }
 
