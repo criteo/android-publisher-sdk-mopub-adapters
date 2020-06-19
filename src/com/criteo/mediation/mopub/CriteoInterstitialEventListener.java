@@ -1,5 +1,6 @@
 package com.criteo.mediation.mopub;
 
+import androidx.annotation.NonNull;
 import com.criteo.publisher.CriteoErrorCode;
 import com.criteo.publisher.CriteoInterstitialAdDisplayListener;
 import com.criteo.publisher.CriteoInterstitialAdListener;
@@ -9,9 +10,10 @@ import com.mopub.mobileads.MoPubErrorCode;
 public class CriteoInterstitialEventListener implements CriteoInterstitialAdListener,
         CriteoInterstitialAdDisplayListener {
 
-    private CustomEventInterstitialListener customEventInterstitialListener;
+    @NonNull
+    private final CustomEventInterstitialListener customEventInterstitialListener;
 
-    public CriteoInterstitialEventListener(CustomEventInterstitialListener listener) {
+    public CriteoInterstitialEventListener(@NonNull CustomEventInterstitialListener listener) {
         customEventInterstitialListener = listener;
     }
 
@@ -27,20 +29,7 @@ public class CriteoInterstitialEventListener implements CriteoInterstitialAdList
 
     @Override
     public void onAdFailedToReceive(CriteoErrorCode code) {
-        switch (code) {
-            case ERROR_CODE_INTERNAL_ERROR:
-                customEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.INTERNAL_ERROR);
-                break;
-            case ERROR_CODE_NETWORK_ERROR:
-                customEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.NETWORK_TIMEOUT);
-                break;
-            case ERROR_CODE_INVALID_REQUEST:
-                customEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.SERVER_ERROR);
-                break;
-            case ERROR_CODE_NO_FILL:
-                customEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.NETWORK_NO_FILL);
-                break;
-        }
+        customEventInterstitialListener.onInterstitialFailed(ErrorCode.toMoPub(code));
     }
 
     @Override
