@@ -135,20 +135,20 @@ class CriteoNativeAdapterTest {
     assertThat(adView.findTextWithTag(ADVERTISER_DOMAIN_TAG)).isEqualTo(expectedAssets.advertiserDomain)
     assertThat(adView.findTextWithTag(ADVERTISER_DESCRIPTION_TAG)).isEqualTo(expectedAssets.advertiserDescription)
 
-    // Image
-    assertThat(adView.findDrawableWithTag(PRODUCT_IMAGE_TAG)).isNotNull.isNotEqualTo(placeholder)
-    assertThat(adView.findDrawableWithTag(ADVERTISER_LOGO_TAG)).isEqualTo(placeholder)
+    // Impression
+    adView.assertDisplayTriggerImpressionPixels(expectedAssets.impressionPixels)
 
     // AdChoice
     val adChoiceView = adChoiceOverlay.adChoiceView(adView)!!
-    assertThat(adChoiceView.drawable).isNotNull
-
-    // Impression
-    adView.assertDisplayTriggerImpressionPixels(expectedAssets.impressionPixels)
 
     // Click
     adView.assertClickRedirectTo(expectedProduct.clickUrl, true)
     adChoiceView.assertClickRedirectTo(expectedAssets.privacyOptOutClickUrl, false)
+
+    // Image
+    assertThat(adView.findDrawableWithTag(PRODUCT_IMAGE_TAG)).isNotNull.isNotEqualTo(placeholder)
+    assertThat(adView.findDrawableWithTag(ADVERTISER_LOGO_TAG)).isEqualTo(placeholder)
+    assertThat(adChoiceView.drawable).isNotNull
   }
 
   @Test
