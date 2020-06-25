@@ -64,6 +64,13 @@ android {
     }
 }
 
+configurations.all {
+    resolutionStrategy {
+        // Picasso wants an old version, but MockWebServer needs a recent one.
+        force("com.squareup.okhttp3:okhttp:4.7.2")
+    }
+}
+
 dependencies {
     def mopubVersion = "5.10.0"
 
