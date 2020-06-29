@@ -146,6 +146,10 @@ class CriteoNativeAdapterTest {
     adChoiceView.assertClickRedirectTo(expectedAssets.privacyOptOutClickUrl, false)
 
     // Image
+    // FIXME: the image loading is done by async and is not synchronized in the waitForIdleState.
+    //  The assertions on click above gains times for the images to be loaded. Hence, those
+    //  assertions may fail is the loading of the image is too long. In such case, adding a
+    //  Thread.sleep should be sufficient to "fix" the asserts.
     assertThat(adView.findDrawableWithTag(PRODUCT_IMAGE_TAG)).isNotNull.isNotEqualTo(placeholder)
     assertThat(adView.findDrawableWithTag(ADVERTISER_LOGO_TAG)).isEqualTo(placeholder)
     assertThat(adChoiceView.drawable).isNotNull
