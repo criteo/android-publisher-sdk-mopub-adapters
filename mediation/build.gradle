@@ -74,8 +74,6 @@ configurations.all {
 dependencies {
     def mopubVersion = "5.10.0"
 
-    // TODO EE-916 Publish SNAPSHOT release of the SDK and use them as a dependency instead of
-    //  relying on dynamic version.
     releaseImplementation("com.criteo.publisher:criteo-publisher-sdk:$sdk_version+")
     debugImplementation("com.criteo.publisher:criteo-publisher-sdk-debug:$sdk_version+")
 
