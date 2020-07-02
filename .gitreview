@@ -1,0 +1,5 @@
+[gerrit]
+host=review.crto.in
+port=29418
+project=pub-sdk/android-mopub-mediation
+defaultbranch=master
