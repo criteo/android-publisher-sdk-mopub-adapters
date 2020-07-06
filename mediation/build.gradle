@@ -157,7 +157,7 @@ task generateReleaseSourcesJar(type: Jar) {
 
 def publicationDescription = "Criteo Direct Bidding for App solution with MoPub mediation platform"
 def publicationWebsite = "https://publisherdocs.criteotilt.com/app/android/mediation/mopub/"
-def githubUrl = "http://github.com/criteo/android-publisher-sdk-mopub-adapters"
+def githubUrl = "https://github.com/criteo/android-publisher-sdk-mopub-adapters"
 
 publishing {
     publications {
