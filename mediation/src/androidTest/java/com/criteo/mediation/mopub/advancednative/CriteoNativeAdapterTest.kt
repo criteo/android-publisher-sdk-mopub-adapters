@@ -146,10 +146,7 @@ class CriteoNativeAdapterTest {
     adChoiceView.assertClickRedirectTo(expectedAssets.privacyOptOutClickUrl, false)
 
     // Image
-    // FIXME: the image loading is done by async and is not synchronized in the waitForIdleState.
-    //  The assertions on click above gains times for the images to be loaded. Hence, those
-    //  assertions may fail is the loading of the image is too long. In such case, adding a
-    //  Thread.sleep should be sufficient to "fix" the asserts.
+    waitForPicasso()
     assertThat(adView.findDrawableWithTag(PRODUCT_IMAGE_TAG)).isNotNull.isNotEqualTo(placeholder)
     assertThat(adView.findDrawableWithTag(ADVERTISER_LOGO_TAG)).isEqualTo(placeholder)
     assertThat(adChoiceView.drawable).isNotNull
@@ -254,6 +251,13 @@ class CriteoNativeAdapterTest {
 
     val quantifier = if (notifyMoPubListener) times(1) else never()
     verify(nativeEventListener, quantifier).onClick(anyOrNull())
+  }
+
+  private fun waitForPicasso() {
+    // Picasso is not synchronized through the waitForIdleState.
+    // Hence it is not possible to reliably wait for downloaded images.
+    // This sleep should at least do the job.
+    Thread.sleep(1000)
   }
 
 }
