@@ -15,30 +15,38 @@
  */
 package com.criteo.mediation.mopub
 
+import android.content.ComponentName
+import android.content.Context
+import android.view.View
+import android.webkit.WebView
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.criteo.mediation.mopub.MoPubHelper.*
 import com.criteo.mediation.mopub.activity.DummyActivity
 import com.criteo.publisher.CriteoUtil.*
+import com.criteo.publisher.STUB_CLICK_URI
 import com.criteo.publisher.StubConstants.STUB_CREATIVE_IMAGE
 import com.criteo.publisher.TestAdUnits.INTERSTITIAL
+import com.criteo.publisher.adview.Redirection
 import com.criteo.publisher.mock.MockedDependenciesRule
+import com.criteo.publisher.mock.SpyBean
 import com.criteo.publisher.model.InterstitialAdUnit
 import com.criteo.publisher.view.WebViewLookup
 import com.criteo.publisher.view.WebViewLookup.getRootView
 import com.criteo.publisher.view.lookForNonEmptyHtmlContent
+import com.criteo.publisher.view.simulateClickOnAd
 import com.mopub.mobileads.CustomEventInterstitial
 import com.mopub.mobileads.MoPubErrorCode.NETWORK_NO_FILL
 import com.mopub.mobileads.MoPubInterstitial
 import com.mopub.mobileads.loadAd
 import com.mopub.network.AdResponse
-import com.nhaarman.mockitokotlin2.inOrder
-import com.nhaarman.mockitokotlin2.verify
+import com.nhaarman.mockitokotlin2.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
+import java.net.URI
 
 class CriteoMopubInterstitialAdapterTest {
 
@@ -51,6 +59,12 @@ class CriteoMopubInterstitialAdapterTest {
   var scenarioRule: ActivityScenarioRule<DummyActivity> = ActivityScenarioRule(DummyActivity::class.java)
 
   private val webViewLookup = WebViewLookup()
+
+  @SpyBean
+  private lateinit var context: Context
+
+  @SpyBean
+  private lateinit var redirection: Redirection
 
   @Mock
   private lateinit var listener: CustomEventInterstitial.CustomEventInterstitialListener
@@ -98,6 +112,9 @@ class CriteoMopubInterstitialAdapterTest {
     val rootView = getRootView(activity)
     val html = webViewLookup.lookForNonEmptyHtmlContent(rootView).get()
     assertThat(html).contains(STUB_CREATIVE_IMAGE)
+
+    rootView.assertClickRedirectTo(STUB_CLICK_URI)
+    verify(interstitialListener, atLeastOnce()).onInterstitialClicked(moPubInterstitial)
   }
 
   @Test
@@ -146,5 +163,27 @@ class CriteoMopubInterstitialAdapterTest {
             )
         )
         .build()
+  }
+
+  private fun View.assertClickRedirectTo(expectedRedirectionUri: URI) {
+    clearInvocations(redirection)
+
+    // Deactivate the redirection
+    doNothing().whenever(this@CriteoMopubInterstitialAdapterTest.context).startActivity(any())
+
+    val webView = webViewLookup.lookForWebViews(this)[0] as WebView
+    webView.simulateClickOnAd()
+    mockedDependenciesRule.waitForIdleState()
+
+    var expectedComponentName: ComponentName? = null
+    scenarioRule.scenario.onActivity {
+      expectedComponentName = it.componentName
+    }
+
+    verify(redirection).redirect(
+        eq(expectedRedirectionUri.toString()),
+        eq(expectedComponentName),
+        any()
+    )
   }
 }
