@@ -17,9 +17,7 @@ package com.criteo.mediation.mopub
 
 import android.content.ComponentName
 import android.content.Context
-import android.view.View
 import android.webkit.WebView
-import android.webkit.WebView.VisualStateCallback
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.criteo.mediation.mopub.MoPubHelper.*
 import com.criteo.mediation.mopub.activity.DummyActivity
@@ -36,6 +34,8 @@ import com.criteo.publisher.mock.SpyBean
 import com.criteo.publisher.model.BannerAdUnit
 import com.criteo.publisher.util.CompletableFuture
 import com.criteo.publisher.view.WebViewLookup
+import com.criteo.publisher.view.lookForNonEmptyHtmlContent
+import com.criteo.publisher.view.waitUntilLoaded
 import com.mopub.mobileads.CustomEventBanner
 import com.mopub.mobileads.MoPubErrorCode.NETWORK_NO_FILL
 import com.mopub.mobileads.MoPubErrorCode.NO_FILL
@@ -50,8 +50,6 @@ import org.junit.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import java.net.URI
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Future
 
 class CriteoMopubBannerAdapterTest {
 
@@ -178,30 +176,6 @@ class CriteoMopubBannerAdapterTest {
         )
         .setDimensions(adUnit.size.width, adUnit.size.height)
         .build()
-  }
-
-  private fun WebViewLookup.lookForNonEmptyHtmlContent(view: View): Future<String> {
-    // TODO move this in test-utils module
-    webViewLookup.lookForWebViews(view).forEach {
-      it.waitUntilLoaded()
-    }
-
-    return webViewLookup.lookForHtmlContent(view)
-  }
-
-  private fun WebView.waitUntilLoaded() {
-    // TODO duplicate of [WebViewClicker#waitUntilWebViewIsLoaded]
-    val isHtmlLoaded = CountDownLatch(1)
-
-    runOnMainThreadAndWait {
-      postVisualStateCallback(42, object : VisualStateCallback() {
-        override fun onComplete(ignored: Long) {
-          isHtmlLoaded.countDown()
-        }
-      })
-    }
-
-    isHtmlLoaded.await()
   }
 
   private fun MoPubView.assertClickRedirectTo(expectedRedirectionUri: URI) {
