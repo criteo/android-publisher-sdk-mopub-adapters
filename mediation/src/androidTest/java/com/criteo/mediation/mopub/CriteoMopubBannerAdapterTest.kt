@@ -17,25 +17,23 @@ package com.criteo.mediation.mopub
 
 import android.content.ComponentName
 import android.content.Context
-import android.webkit.WebView
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.criteo.mediation.mopub.MoPubHelper.*
 import com.criteo.mediation.mopub.activity.DummyActivity
 import com.criteo.publisher.CriteoBannerView
 import com.criteo.publisher.CriteoUtil.*
+import com.criteo.publisher.STUB_CLICK_URI
 import com.criteo.publisher.StubConstants.STUB_DISPLAY_URL
-import com.criteo.publisher.adview.Redirection
 import com.criteo.publisher.TestAdUnits.BANNER_320_50
 import com.criteo.publisher.TestAdUnits.BANNER_UNKNOWN
+import com.criteo.publisher.adview.Redirection
 import com.criteo.publisher.concurrent.ThreadingUtil.callOnMainThreadAndWait
-import com.criteo.publisher.concurrent.ThreadingUtil.runOnMainThreadAndWait
 import com.criteo.publisher.mock.MockedDependenciesRule
 import com.criteo.publisher.mock.SpyBean
 import com.criteo.publisher.model.BannerAdUnit
-import com.criteo.publisher.util.CompletableFuture
 import com.criteo.publisher.view.WebViewLookup
 import com.criteo.publisher.view.lookForNonEmptyHtmlContent
-import com.criteo.publisher.view.waitUntilLoaded
+import com.criteo.publisher.view.simulateClickOnAd
 import com.mopub.mobileads.CustomEventBanner
 import com.mopub.mobileads.MoPubErrorCode.NETWORK_NO_FILL
 import com.mopub.mobileads.MoPubErrorCode.NO_FILL
@@ -91,7 +89,6 @@ class CriteoMopubBannerAdapterTest {
   fun loadBannerAd_GivenValidAdUnit_CallCriteoAdapterAndNotifyMoPubListenerForSuccess() {
     // Given
     val adUnit = BANNER_320_50
-    val expectedRedirection = URI.create("https://criteo.com/") // Returned by the Casper stub
 
     // When
     givenInitializedCriteo(adUnit)
@@ -108,7 +105,7 @@ class CriteoMopubBannerAdapterTest {
     val html = webViewLookup.lookForNonEmptyHtmlContent(moPubView).get()
     assertThat(html).containsPattern(STUB_DISPLAY_URL)
 
-    moPubView.assertClickRedirectTo(expectedRedirection)
+    moPubView.assertClickRedirectTo(STUB_CLICK_URI)
   }
 
   @Test
@@ -183,7 +180,7 @@ class CriteoMopubBannerAdapterTest {
     clearInvocations(bannerListener)
 
     // Deactivate the redirection
-    doNothing().whenever(context).startActivity(any())
+    doNothing().whenever(this@CriteoMopubBannerAdapterTest.context).startActivity(any())
 
     val bannerView = webViewLookup.lookForWebViews(this)[0] as CriteoBannerView
     bannerView.simulateClickOnAd()
@@ -203,32 +200,4 @@ class CriteoMopubBannerAdapterTest {
     verify(bannerListener, atLeastOnce()).onBannerClicked(this)
   }
 
-  private fun WebView.simulateClickOnAd() {
-    // TODO kind of duplication of [WebViewClicker#simulateClickOnAd]
-    waitUntilLoaded()
-    val isClickDone = CompletableFuture<Void>()
-
-    // Simulate click via JavaScript
-    runOnMainThreadAndWait {
-      val javascript = """
-          (function() {
-            var elements = document.getElementsByTagName('a');
-            if (elements.length != 1) {
-              return false;
-            }
-            elements[0].click();
-            return true;
-          })();""".trimIndent()
-
-      evaluateJavascript(javascript) { value: String ->
-        if ("true" != value) {
-          isClickDone.completeExceptionally(IllegalStateException("Clickable element was not found in the WebView"))
-        } else {
-          isClickDone.complete(null)
-        }
-      }
-    }
-
-    isClickDone.get()
-  }
 }
