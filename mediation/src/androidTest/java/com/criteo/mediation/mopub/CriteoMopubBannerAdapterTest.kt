@@ -15,37 +15,41 @@
  */
 package com.criteo.mediation.mopub
 
+import android.content.ComponentName
 import android.content.Context
 import android.view.View
 import android.webkit.WebView
 import android.webkit.WebView.VisualStateCallback
+import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.criteo.mediation.mopub.MoPubHelper.*
+import com.criteo.mediation.mopub.activity.DummyActivity
 import com.criteo.publisher.CriteoBannerView
 import com.criteo.publisher.CriteoUtil.*
 import com.criteo.publisher.StubConstants.STUB_DISPLAY_URL
+import com.criteo.publisher.adview.Redirection
 import com.criteo.publisher.TestAdUnits.BANNER_320_50
 import com.criteo.publisher.concurrent.ThreadingUtil.callOnMainThreadAndWait
 import com.criteo.publisher.concurrent.ThreadingUtil.runOnMainThreadAndWait
 import com.criteo.publisher.mock.MockedDependenciesRule
+import com.criteo.publisher.mock.SpyBean
 import com.criteo.publisher.model.BannerAdUnit
+import com.criteo.publisher.util.CompletableFuture
 import com.criteo.publisher.view.WebViewLookup
 import com.mopub.mobileads.CustomEventBanner
 import com.mopub.mobileads.MoPubErrorCode
 import com.mopub.mobileads.MoPubView
 import com.mopub.mobileads.loadAd
 import com.mopub.network.AdResponse
-import com.nhaarman.mockitokotlin2.any
-import com.nhaarman.mockitokotlin2.inOrder
-import com.nhaarman.mockitokotlin2.verify
+import com.nhaarman.mockitokotlin2.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
+import java.net.URI
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Future
-import javax.inject.Inject
 
 class CriteoMopubBannerAdapterTest {
 
@@ -53,14 +57,21 @@ class CriteoMopubBannerAdapterTest {
   @JvmField
   val mockedDependenciesRule = MockedDependenciesRule()
 
+  @Rule
+  @JvmField
+  var scenarioRule: ActivityScenarioRule<DummyActivity> = ActivityScenarioRule(DummyActivity::class.java)
+
   private val webViewLookup = WebViewLookup()
 
-  @Inject
+  @SpyBean
   private lateinit var context: Context
 
   private lateinit var adapter: CriteoBannerAdapter
 
   private lateinit var adapterHelper: BannerAdapterHelper
+
+  @SpyBean
+  private lateinit var redirection: Redirection
 
   @Mock
   private lateinit var listener: CustomEventBanner.CustomEventBannerListener
@@ -80,6 +91,7 @@ class CriteoMopubBannerAdapterTest {
   fun loadBannerAd_GivenValidAdUnit_CallCriteoAdapterAndNotifyMoPubListenerForSuccess() {
     // Given
     val adUnit = BANNER_320_50
+    val expectedRedirection = URI.create("https://criteo.com/") // Returned by the Casper stub
 
     // When
     givenInitializedCriteo(adUnit)
@@ -95,6 +107,8 @@ class CriteoMopubBannerAdapterTest {
 
     val html = webViewLookup.lookForNonEmptyHtmlContent(moPubView).get()
     assertThat(html).containsPattern(STUB_DISPLAY_URL)
+
+    moPubView.assertClickRedirectTo(expectedRedirection)
   }
 
   @Test
@@ -156,7 +170,7 @@ class CriteoMopubBannerAdapterTest {
   }
 
   private fun WebView.waitUntilLoaded() {
-    // TODO duplicate of [webViewClicker#waitUntilWebViewIsLoaded]
+    // TODO duplicate of [WebViewClicker#waitUntilWebViewIsLoaded]
     val isHtmlLoaded = CountDownLatch(1)
 
     runOnMainThreadAndWait {
@@ -168,5 +182,59 @@ class CriteoMopubBannerAdapterTest {
     }
 
     isHtmlLoaded.await()
+  }
+
+  private fun MoPubView.assertClickRedirectTo(expectedRedirectionUri: URI) {
+    clearInvocations(redirection)
+    clearInvocations(bannerListener)
+
+    // Deactivate the redirection
+    doNothing().whenever(context).startActivity(any())
+
+    val bannerView = webViewLookup.lookForWebViews(this)[0] as CriteoBannerView
+    bannerView.simulateClickOnAd()
+    mockedDependenciesRule.waitForIdleState()
+
+    var expectedComponentName: ComponentName? = null
+    scenarioRule.scenario.onActivity {
+      expectedComponentName = it.componentName
+    }
+
+    verify(redirection).redirect(
+        eq(expectedRedirectionUri.toString()),
+        eq(expectedComponentName),
+        any()
+    )
+
+    verify(bannerListener, atLeastOnce()).onBannerClicked(this)
+  }
+
+  private fun WebView.simulateClickOnAd() {
+    // TODO kind of duplication of [WebViewClicker#simulateClickOnAd]
+    waitUntilLoaded()
+    val isClickDone = CompletableFuture<Void>()
+
+    // Simulate click via JavaScript
+    runOnMainThreadAndWait {
+      val javascript = """
+          (function() {
+            var elements = document.getElementsByTagName('a');
+            if (elements.length != 1) {
+              return false;
+            }
+            elements[0].click();
+            return true;
+          })();""".trimIndent()
+
+      evaluateJavascript(javascript) { value: String ->
+        if ("true" != value) {
+          isClickDone.completeExceptionally(IllegalStateException("Clickable element was not found in the WebView"))
+        } else {
+          isClickDone.complete(null)
+        }
+      }
+    }
+
+    isClickDone.get()
   }
 }
