@@ -20,9 +20,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import android.content.Context;
 import com.mopub.mobileads.CustomEventBanner.CustomEventBannerListener;
+import com.mopub.mobileads.MoPubErrorCode;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -107,6 +109,12 @@ public class CriteoBannerAdapterTest {
     Map<String, Object> localExtras = setupLocalExtras(adSizeWidth, adSizeHeight);
     Map<String, String> serverExtras = setupServerExtras(adUnitId, publisherId);
 
+    MoPubErrorCode expectedError = MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR;
+    if (publisherId != null && adSizeWidth != null && adSizeHeight != null && adUnitId == null) {
+      // If everything is good except the ad unit id
+      expectedError = MoPubErrorCode.MISSING_AD_UNIT_ID;
+    }
+
     // when
     criteoBannerAdapter
         .loadBanner(context, customEvenBannerListener, localExtras, serverExtras);
@@ -116,10 +124,12 @@ public class CriteoBannerAdapterTest {
       verify(criteoInitializer).init(context, "fake_publisher_id");
     } else {
       verify(criteoInitializer, never()).init(any(Context.class), anyString());
+      verify(customEvenBannerListener).onBannerFailed(expectedError);
+      verifyNoMoreInteractions(customEvenBannerListener);
     }
   }
 
-  private Map<String, Object> setupLocalExtras(Integer height, Integer width) {
+  private Map<String, Object> setupLocalExtras(Integer width, Integer height) {
     Map<String, Object> localExtras = new HashMap<>();
 
     if (height != null) {
