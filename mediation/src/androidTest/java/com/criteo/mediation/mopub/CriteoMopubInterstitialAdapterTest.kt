@@ -15,13 +15,20 @@
  */
 package com.criteo.mediation.mopub
 
-import com.criteo.publisher.CriteoUtil.clearCriteo
-import com.criteo.publisher.CriteoUtil.givenInitializedCriteo
+import androidx.test.ext.junit.rules.ActivityScenarioRule
+import com.criteo.mediation.mopub.MoPubHelper.*
+import com.criteo.mediation.mopub.activity.DummyActivity
+import com.criteo.publisher.CriteoUtil.*
 import com.criteo.publisher.TestAdUnits.INTERSTITIAL
 import com.criteo.publisher.mock.MockedDependenciesRule
+import com.criteo.publisher.model.InterstitialAdUnit
 import com.mopub.mobileads.CustomEventInterstitial
 import com.mopub.mobileads.MoPubErrorCode.NETWORK_NO_FILL
+import com.mopub.mobileads.MoPubInterstitial
+import com.mopub.mobileads.loadAd
+import com.mopub.network.AdResponse
 import com.nhaarman.mockitokotlin2.inOrder
+import com.nhaarman.mockitokotlin2.verify
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -34,8 +41,15 @@ class CriteoMopubInterstitialAdapterTest {
   @JvmField
   val mockedDependenciesRule = MockedDependenciesRule()
 
+  @Rule
+  @JvmField
+  var scenarioRule: ActivityScenarioRule<DummyActivity> = ActivityScenarioRule(DummyActivity::class.java)
+
   @Mock
   private lateinit var listener: CustomEventInterstitial.CustomEventInterstitialListener
+
+  @Mock
+  private lateinit var interstitialListener: MoPubInterstitial.InterstitialAdListener
 
   private lateinit var adapter: CriteoInterstitialAdapter
 
@@ -47,6 +61,27 @@ class CriteoMopubInterstitialAdapterTest {
     clearCriteo()
     adapter = CriteoInterstitialAdapter()
     adapterHelper = InterstitialAdapterHelper(adapter)
+  }
+
+  @Test
+  fun loadInterstitialAd_GivenValidAdUnit_CallCriteoAdapterAndNotifyMoPubListenerForSuccess() {
+    // Given
+    val adUnit = INTERSTITIAL
+
+    // When
+    givenInitializedCriteo(adUnit)
+    mockedDependenciesRule.waitForIdleState()
+
+    lateinit var moPubInterstitial: MoPubInterstitial
+    scenarioRule.scenario.onActivity {
+      moPubInterstitial = MoPubInterstitial(it, "a mopub adunit")
+    }
+    moPubInterstitial.interstitialAdListener = interstitialListener
+    moPubInterstitial.loadAd(adUnit)
+    mockedDependenciesRule.waitForIdleState()
+
+    // Then
+    verify(interstitialListener).onInterstitialLoaded(moPubInterstitial)
   }
 
   @Test
@@ -78,5 +113,22 @@ class CriteoMopubInterstitialAdapterTest {
       verify(listener).onInterstitialLoaded()
       verifyNoMoreInteractions()
     }
+  }
+
+  private fun MoPubInterstitial.loadAd(adUnit: InterstitialAdUnit) {
+    val adResponse = givenMoPubResponseForCriteoAdapter(adUnit)
+    loadAd(adResponse)
+  }
+
+  private fun givenMoPubResponseForCriteoAdapter(adUnit: InterstitialAdUnit): AdResponse {
+    return AdResponse.Builder()
+        .setCustomEventClassName(INTERSTITIAL_ADAPTER_CLASS_NAME)
+        .setServerExtras(
+            mapOf(
+                CRITEO_PUBLISHER_ID to TEST_CP_ID,
+                ADUNIT_ID to adUnit.adUnitId
+            )
+        )
+        .build()
   }
 }

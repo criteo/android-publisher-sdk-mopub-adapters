@@ -25,6 +25,7 @@ public class MoPubHelper {
   // MoPub server by each publisher for each of their ad units. Renaming any of these classes must
   // make the tests fail
   public static final String BANNER_ADAPTER_CLASS_NAME = "com.criteo.mediation.mopub.CriteoBannerAdapter";
+  public static final String INTERSTITIAL_ADAPTER_CLASS_NAME = "com.criteo.mediation.mopub.CriteoInterstitialAdapter";
   public static final String NATIVE_ADAPTER_CLASS_NAME = "com.criteo.mediation.mopub.advancednative.CriteoNativeAdapter";
 
   public static final String ADUNIT_ID = "adUnitId";
