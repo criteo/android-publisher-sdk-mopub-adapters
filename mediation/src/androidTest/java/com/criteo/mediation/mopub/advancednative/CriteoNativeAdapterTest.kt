@@ -23,8 +23,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.test.ext.junit.rules.ActivityScenarioRule
-import com.criteo.mediation.mopub.MoPubHelper.ADUNIT_ID
-import com.criteo.mediation.mopub.MoPubHelper.CRITEO_PUBLISHER_ID
+import com.criteo.mediation.mopub.MoPubHelper.*
 import com.criteo.mediation.mopub.activity.DummyActivity
 import com.criteo.mediation.mopub.advancednative.TestNativeRenderer.Companion.ADVERTISER_DESCRIPTION_TAG
 import com.criteo.mediation.mopub.advancednative.TestNativeRenderer.Companion.ADVERTISER_DOMAIN_TAG
@@ -178,7 +177,7 @@ class CriteoNativeAdapterTest {
 
   private fun givenMoPubResponseForCriteoAdapter(adUnit: NativeAdUnit): AdResponse {
     return AdResponse.Builder()
-        .setCustomEventClassName("com.criteo.mediation.mopub.advancednative.CriteoNativeAdapter")
+        .setCustomEventClassName(NATIVE_ADAPTER_CLASS_NAME)
         .setServerExtras(mapOf(
             CRITEO_PUBLISHER_ID to TEST_CP_ID,
             ADUNIT_ID to adUnit.adUnitId

@@ -15,26 +15,37 @@
  */
 package com.criteo.mediation.mopub
 
+import android.content.Context
+import com.criteo.mediation.mopub.MoPubHelper.*
 import com.criteo.publisher.CriteoBannerView
-import com.criteo.publisher.CriteoUtil.clearCriteo
-import com.criteo.publisher.CriteoUtil.givenInitializedCriteo
-import com.criteo.publisher.TestAdUnits
+import com.criteo.publisher.CriteoUtil.*
+import com.criteo.publisher.TestAdUnits.BANNER_320_50
+import com.criteo.publisher.concurrent.ThreadingUtil.callOnMainThreadAndWait
 import com.criteo.publisher.mock.MockedDependenciesRule
+import com.criteo.publisher.model.BannerAdUnit
 import com.mopub.mobileads.CustomEventBanner
 import com.mopub.mobileads.MoPubErrorCode
+import com.mopub.mobileads.MoPubView
+import com.mopub.mobileads.loadAd
+import com.mopub.network.AdResponse
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.inOrder
+import com.nhaarman.mockitokotlin2.verify
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
+import javax.inject.Inject
 
 class CriteoMopubBannerAdapterTest {
 
   @Rule
   @JvmField
   val mockedDependenciesRule = MockedDependenciesRule()
+
+  @Inject
+  private lateinit var context: Context
 
   private lateinit var adapter: CriteoBannerAdapter
 
@@ -43,12 +54,33 @@ class CriteoMopubBannerAdapterTest {
   @Mock
   private lateinit var listener: CustomEventBanner.CustomEventBannerListener
 
+  @Mock
+  private lateinit var bannerListener: MoPubView.BannerAdListener
+
   @Before
   fun setUp() {
     MockitoAnnotations.initMocks(this)
     clearCriteo()
     adapter = CriteoBannerAdapter()
     adapterHelper = BannerAdapterHelper(adapter)
+  }
+
+  @Test
+  fun loadBannerAd_GivenValidAdUnit_CallCriteoAdapterAndNotifyMoPubListenerForSuccess() {
+    // Given
+    val adUnit = BANNER_320_50
+
+    // When
+    givenInitializedCriteo(adUnit)
+    mockedDependenciesRule.waitForIdleState()
+
+    val moPubView = callOnMainThreadAndWait { MoPubView(context) }
+    moPubView.bannerAdListener = bannerListener
+    moPubView.loadAd(adUnit)
+    mockedDependenciesRule.waitForIdleState()
+
+    // Then
+    verify(bannerListener).onBannerLoaded(moPubView)
   }
 
   @Test
@@ -70,7 +102,7 @@ class CriteoMopubBannerAdapterTest {
   }
 
   private fun loadValidBanner() {
-    adapterHelper.loadBanner(TestAdUnits.BANNER_320_50, listener)
+    adapterHelper.loadBanner(BANNER_320_50, listener)
     mockedDependenciesRule.waitForIdleState()
   }
 
@@ -80,5 +112,23 @@ class CriteoMopubBannerAdapterTest {
       verify(listener).onBannerLoaded(any<CriteoBannerView>())
       verifyNoMoreInteractions()
     }
+  }
+
+  private fun MoPubView.loadAd(adUnit: BannerAdUnit) {
+    val adResponse = givenMoPubResponseForCriteoAdapter(adUnit)
+    loadAd(adResponse)
+  }
+
+  private fun givenMoPubResponseForCriteoAdapter(adUnit: BannerAdUnit): AdResponse {
+    return AdResponse.Builder()
+        .setCustomEventClassName(BANNER_ADAPTER_CLASS_NAME)
+        .setServerExtras(
+            mapOf(
+                CRITEO_PUBLISHER_ID to TEST_CP_ID,
+                ADUNIT_ID to adUnit.adUnitId
+            )
+        )
+        .setDimensions(adUnit.size.width, adUnit.size.height)
+        .build()
   }
 }
