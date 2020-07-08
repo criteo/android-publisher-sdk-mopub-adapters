@@ -19,9 +19,13 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.criteo.mediation.mopub.MoPubHelper.*
 import com.criteo.mediation.mopub.activity.DummyActivity
 import com.criteo.publisher.CriteoUtil.*
+import com.criteo.publisher.StubConstants.STUB_CREATIVE_IMAGE
 import com.criteo.publisher.TestAdUnits.INTERSTITIAL
 import com.criteo.publisher.mock.MockedDependenciesRule
 import com.criteo.publisher.model.InterstitialAdUnit
+import com.criteo.publisher.view.WebViewLookup
+import com.criteo.publisher.view.WebViewLookup.getRootView
+import com.criteo.publisher.view.lookForNonEmptyHtmlContent
 import com.mopub.mobileads.CustomEventInterstitial
 import com.mopub.mobileads.MoPubErrorCode.NETWORK_NO_FILL
 import com.mopub.mobileads.MoPubInterstitial
@@ -29,6 +33,7 @@ import com.mopub.mobileads.loadAd
 import com.mopub.network.AdResponse
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.verify
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -44,6 +49,8 @@ class CriteoMopubInterstitialAdapterTest {
   @Rule
   @JvmField
   var scenarioRule: ActivityScenarioRule<DummyActivity> = ActivityScenarioRule(DummyActivity::class.java)
+
+  private val webViewLookup = WebViewLookup()
 
   @Mock
   private lateinit var listener: CustomEventInterstitial.CustomEventInterstitialListener
@@ -80,8 +87,17 @@ class CriteoMopubInterstitialAdapterTest {
     moPubInterstitial.loadAd(adUnit)
     mockedDependenciesRule.waitForIdleState()
 
+    val activity = webViewLookup.lookForResumedActivity {
+      moPubInterstitial.show()
+    }.get()
+
     // Then
     verify(interstitialListener).onInterstitialLoaded(moPubInterstitial)
+    verify(interstitialListener).onInterstitialShown(moPubInterstitial)
+
+    val rootView = getRootView(activity)
+    val html = webViewLookup.lookForNonEmptyHtmlContent(rootView).get()
+    assertThat(html).contains(STUB_CREATIVE_IMAGE)
   }
 
   @Test
