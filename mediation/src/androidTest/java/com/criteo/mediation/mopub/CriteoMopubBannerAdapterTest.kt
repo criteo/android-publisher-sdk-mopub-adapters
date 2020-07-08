@@ -28,6 +28,7 @@ import com.criteo.publisher.CriteoUtil.*
 import com.criteo.publisher.StubConstants.STUB_DISPLAY_URL
 import com.criteo.publisher.adview.Redirection
 import com.criteo.publisher.TestAdUnits.BANNER_320_50
+import com.criteo.publisher.TestAdUnits.BANNER_UNKNOWN
 import com.criteo.publisher.concurrent.ThreadingUtil.callOnMainThreadAndWait
 import com.criteo.publisher.concurrent.ThreadingUtil.runOnMainThreadAndWait
 import com.criteo.publisher.mock.MockedDependenciesRule
@@ -36,7 +37,8 @@ import com.criteo.publisher.model.BannerAdUnit
 import com.criteo.publisher.util.CompletableFuture
 import com.criteo.publisher.view.WebViewLookup
 import com.mopub.mobileads.CustomEventBanner
-import com.mopub.mobileads.MoPubErrorCode
+import com.mopub.mobileads.MoPubErrorCode.NETWORK_NO_FILL
+import com.mopub.mobileads.MoPubErrorCode.NO_FILL
 import com.mopub.mobileads.MoPubView
 import com.mopub.mobileads.loadAd
 import com.mopub.network.AdResponse
@@ -112,6 +114,24 @@ class CriteoMopubBannerAdapterTest {
   }
 
   @Test
+  fun loadBannerAd_GivenInvalidAdUnit_NotifyMoPubListenerForFailure() {
+    // Given
+    val adUnit = BANNER_UNKNOWN
+
+    // When
+    givenInitializedCriteo(adUnit)
+    mockedDependenciesRule.waitForIdleState()
+
+    val moPubView = callOnMainThreadAndWait { MoPubView(context) }
+    moPubView.bannerAdListener = bannerListener
+    moPubView.loadAd(adUnit)
+    mockedDependenciesRule.waitForIdleState()
+
+    // Then
+    verify(bannerListener).onBannerFailed(moPubView, NO_FILL)
+  }
+
+  @Test
   fun givenNotInitializedCriteo_WhenLoadingBannerTwice_MissFirstOpportunityBecauseOfBidCachingAndSucceedOnNextOne() {
     loadValidBanner()
     loadValidBanner()
@@ -136,7 +156,7 @@ class CriteoMopubBannerAdapterTest {
 
   private fun checkMissFirstOpportunityBecauseOfBidCachingAndSucceedOnNextOne() {
     inOrder(listener) {
-      verify(listener).onBannerFailed(MoPubErrorCode.NETWORK_NO_FILL)
+      verify(listener).onBannerFailed(NETWORK_NO_FILL)
       verify(listener).onBannerLoaded(any<CriteoBannerView>())
       verifyNoMoreInteractions()
     }
