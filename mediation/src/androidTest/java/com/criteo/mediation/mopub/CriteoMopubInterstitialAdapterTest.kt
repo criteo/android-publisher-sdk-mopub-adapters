@@ -26,6 +26,7 @@ import com.criteo.publisher.CriteoUtil.*
 import com.criteo.publisher.STUB_CLICK_URI
 import com.criteo.publisher.StubConstants.STUB_CREATIVE_IMAGE
 import com.criteo.publisher.TestAdUnits.INTERSTITIAL
+import com.criteo.publisher.TestAdUnits.INTERSTITIAL_UNKNOWN
 import com.criteo.publisher.adview.Redirection
 import com.criteo.publisher.mock.MockedDependenciesRule
 import com.criteo.publisher.mock.SpyBean
@@ -36,6 +37,7 @@ import com.criteo.publisher.view.lookForNonEmptyHtmlContent
 import com.criteo.publisher.view.simulateClickOnAd
 import com.mopub.mobileads.CustomEventInterstitial
 import com.mopub.mobileads.MoPubErrorCode.NETWORK_NO_FILL
+import com.mopub.mobileads.MoPubErrorCode.NO_FILL
 import com.mopub.mobileads.MoPubInterstitial
 import com.mopub.mobileads.loadAd
 import com.mopub.network.AdResponse
@@ -115,6 +117,27 @@ class CriteoMopubInterstitialAdapterTest {
 
     rootView.assertClickRedirectTo(STUB_CLICK_URI)
     verify(interstitialListener, atLeastOnce()).onInterstitialClicked(moPubInterstitial)
+  }
+
+  @Test
+  fun loadInterstitialAd_GivenInvalidAdUnit_NotifyMoPubListenerForFailure() {
+    // Given
+    val adUnit = INTERSTITIAL_UNKNOWN
+
+    // When
+    givenInitializedCriteo(adUnit)
+    mockedDependenciesRule.waitForIdleState()
+
+    lateinit var moPubInterstitial: MoPubInterstitial
+    scenarioRule.scenario.onActivity {
+      moPubInterstitial = MoPubInterstitial(it, "a mopub adunit")
+    }
+    moPubInterstitial.interstitialAdListener = interstitialListener
+    moPubInterstitial.loadAd(adUnit)
+    mockedDependenciesRule.waitForIdleState()
+
+    // Then
+    verify(interstitialListener).onInterstitialFailed(moPubInterstitial, NO_FILL)
   }
 
   @Test
