@@ -16,13 +16,19 @@
 package com.criteo.mediation.mopub
 
 import android.content.Context
+import android.view.View
+import android.webkit.WebView
+import android.webkit.WebView.VisualStateCallback
 import com.criteo.mediation.mopub.MoPubHelper.*
 import com.criteo.publisher.CriteoBannerView
 import com.criteo.publisher.CriteoUtil.*
+import com.criteo.publisher.StubConstants.STUB_DISPLAY_URL
 import com.criteo.publisher.TestAdUnits.BANNER_320_50
 import com.criteo.publisher.concurrent.ThreadingUtil.callOnMainThreadAndWait
+import com.criteo.publisher.concurrent.ThreadingUtil.runOnMainThreadAndWait
 import com.criteo.publisher.mock.MockedDependenciesRule
 import com.criteo.publisher.model.BannerAdUnit
+import com.criteo.publisher.view.WebViewLookup
 import com.mopub.mobileads.CustomEventBanner
 import com.mopub.mobileads.MoPubErrorCode
 import com.mopub.mobileads.MoPubView
@@ -31,11 +37,14 @@ import com.mopub.network.AdResponse
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.verify
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Future
 import javax.inject.Inject
 
 class CriteoMopubBannerAdapterTest {
@@ -43,6 +52,8 @@ class CriteoMopubBannerAdapterTest {
   @Rule
   @JvmField
   val mockedDependenciesRule = MockedDependenciesRule()
+
+  private val webViewLookup = WebViewLookup()
 
   @Inject
   private lateinit var context: Context
@@ -81,6 +92,9 @@ class CriteoMopubBannerAdapterTest {
 
     // Then
     verify(bannerListener).onBannerLoaded(moPubView)
+
+    val html = webViewLookup.lookForNonEmptyHtmlContent(moPubView).get()
+    assertThat(html).containsPattern(STUB_DISPLAY_URL)
   }
 
   @Test
@@ -130,5 +144,29 @@ class CriteoMopubBannerAdapterTest {
         )
         .setDimensions(adUnit.size.width, adUnit.size.height)
         .build()
+  }
+
+  private fun WebViewLookup.lookForNonEmptyHtmlContent(view: View): Future<String> {
+    // TODO move this in test-utils module
+    webViewLookup.lookForWebViews(view).forEach {
+      it.waitUntilLoaded()
+    }
+
+    return webViewLookup.lookForHtmlContent(view)
+  }
+
+  private fun WebView.waitUntilLoaded() {
+    // TODO duplicate of [webViewClicker#waitUntilWebViewIsLoaded]
+    val isHtmlLoaded = CountDownLatch(1)
+
+    runOnMainThreadAndWait {
+      postVisualStateCallback(42, object : VisualStateCallback() {
+        override fun onComplete(ignored: Long) {
+          isHtmlLoaded.countDown()
+        }
+      })
+    }
+
+    isHtmlLoaded.await()
   }
 }
