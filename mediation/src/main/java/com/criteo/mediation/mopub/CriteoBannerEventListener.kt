@@ -13,49 +13,33 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+package com.criteo.mediation.mopub
 
-package com.criteo.mediation.mopub;
+import android.view.View
+import com.criteo.publisher.CriteoBannerAdListener
+import com.criteo.publisher.CriteoErrorCode
+import com.mopub.mobileads.CustomEventBanner
 
-import android.view.View;
-import androidx.annotation.NonNull;
-import com.criteo.publisher.CriteoBannerAdListener;
-import com.criteo.publisher.CriteoErrorCode;
-import com.mopub.mobileads.CustomEventBanner.CustomEventBannerListener;
+class CriteoBannerEventListener(private val listener: CustomEventBanner.CustomEventBannerListener) :
+    CriteoBannerAdListener {
 
-public class CriteoBannerEventListener implements CriteoBannerAdListener {
+  override fun onAdReceived(view: View) {
+    listener.onBannerLoaded(view)
+  }
 
-    @NonNull
-    private final CustomEventBannerListener customEventBannerListener;
+  override fun onAdFailedToReceive(code: CriteoErrorCode) {
+    listener.onBannerFailed(ErrorCode.toMoPub(code))
+  }
 
-    public CriteoBannerEventListener(@NonNull CustomEventBannerListener listener) {
-        customEventBannerListener = listener;
-    }
+  override fun onAdLeftApplication() {
+    listener.onLeaveApplication()
+  }
 
-    @Override
-    public void onAdReceived(View view) {
-        customEventBannerListener.onBannerLoaded(view);
-    }
+  override fun onAdClicked() {
+    listener.onBannerClicked()
+  }
 
-    @Override
-    public void onAdFailedToReceive(CriteoErrorCode code) {
-        customEventBannerListener.onBannerFailed(ErrorCode.toMoPub(code));
-    }
+  override fun onAdOpened() {}
+  override fun onAdClosed() {}
 
-    @Override
-    public void onAdLeftApplication() {
-        customEventBannerListener.onLeaveApplication();
-    }
-
-    @Override
-    public void onAdClicked() {
-        customEventBannerListener.onBannerClicked();
-    }
-
-    @Override
-    public void onAdOpened() {
-    }
-
-    @Override
-    public void onAdClosed() {
-    }
 }
