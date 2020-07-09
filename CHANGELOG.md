@@ -3,6 +3,9 @@
 ## Next
 * Refactor non-native adapter classes to use the new consolidated API from MoPub.
 * This and newer adapter versions are only compatible with 5.13.0+ MoPub SDK.
+* Artifacts are now delivered through `JCenter` repository instead of a custom one: from this
+version, the line `maven { url "https://pubsdk-bin.criteo.com/publishersdk/android" }` can be
+removed.
 
 ## 3.7.0.0
 * This version of the adapter has been tested against the Publisher SDK 3.7.0
