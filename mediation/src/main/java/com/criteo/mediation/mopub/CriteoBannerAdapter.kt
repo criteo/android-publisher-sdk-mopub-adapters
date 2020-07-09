@@ -13,104 +13,93 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+package com.criteo.mediation.mopub
 
-package com.criteo.mediation.mopub;
+import android.content.Context
+import com.criteo.publisher.CriteoBannerView
+import com.criteo.publisher.model.AdSize
+import com.criteo.publisher.model.BannerAdUnit
+import com.mopub.common.VisibleForTesting
+import com.mopub.common.logging.MoPubLog.AdapterLogEvent.LOAD_ATTEMPTED
+import com.mopub.common.logging.MoPubLog.AdapterLogEvent.LOAD_FAILED
+import com.mopub.mobileads.CustomEventBanner
+import com.mopub.mobileads.MoPubErrorCode
 
-import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.LOAD_ATTEMPTED;
-import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.LOAD_FAILED;
+class CriteoBannerAdapter @VisibleForTesting internal constructor(
+    private val criteoInitializer: CriteoInitializer
+) : CustomEventBanner() {
 
-import android.content.Context;
-import androidx.annotation.NonNull;
-import com.criteo.publisher.CriteoBannerView;
-import com.criteo.publisher.model.AdSize;
-import com.criteo.publisher.model.BannerAdUnit;
-import com.mopub.common.VisibleForTesting;
-import com.mopub.common.logging.MoPubLog;
-import com.mopub.mobileads.CustomEventBanner;
-import com.mopub.mobileads.MoPubErrorCode;
-import java.util.Map;
+  private var bannerView: CriteoBannerView? = null
 
-public class CriteoBannerAdapter extends CustomEventBanner {
+  constructor() : this(CriteoInitializer())
 
-    private static final String TAG = CriteoBannerAdapter.class.getSimpleName();
-    protected static final String ADUNIT_ID = "adUnitId";
-    protected static final String CRITEO_PUBLISHER_ID = "cpId";
-    protected static final String MOPUB_WIDTH = "com_mopub_ad_width";
-    protected static final String MOPUB_HEIGHT = "com_mopub_ad_height";
-    private CriteoBannerView bannerView;
-
-    private final CriteoInitializer criteoInitializer;
-
-    public CriteoBannerAdapter() {
-        this(new CriteoInitializer());
+  public override fun loadBanner(
+      context: Context,
+      customEventBannerListener: CustomEventBannerListener,
+      localExtras: Map<String, Any>?,
+      serverExtras: Map<String, String>?
+  ) {
+    if (localExtras == null
+        || localExtras.isEmpty()
+        || serverExtras == null
+        || serverExtras.isEmpty()) {
+      MoPubLog.log(LOAD_FAILED, TAG, "Server parameters are empty")
+      customEventBannerListener.onBannerFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR)
+      return
     }
 
-    @VisibleForTesting
-    CriteoBannerAdapter(@NonNull CriteoInitializer criteoInitializer) {
-        this.criteoInitializer = criteoInitializer;
+    val adSize = getAdSize(localExtras)
+    val criteoPublisherId = serverExtras[CRITEO_PUBLISHER_ID]
+    if (adSize == null || criteoPublisherId == null) {
+      MoPubLog.log(LOAD_FAILED, TAG, "CriteoPublisherId cannot be null")
+      customEventBannerListener.onBannerFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR)
+      return
     }
 
-    @Override
-    protected void loadBanner(Context context, CustomEventBannerListener customEventBannerListener,
-            Map<String, Object> localExtras, Map<String, String> serverExtras) {
-
-        boolean localExtrasEmpty = (localExtras == null) || localExtras.isEmpty();
-        boolean serverExtrasEmpty = (serverExtras == null) || serverExtras.isEmpty();
-
-        if (localExtrasEmpty || serverExtrasEmpty) {
-            MoPubLog.log(LOAD_FAILED, TAG, "Server parameters are empty");
-            customEventBannerListener.onBannerFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
-            return;
-        }
-
-        AdSize adSize = getAdSize(localExtras);
-        String criteoPublisherId = serverExtras.get(CRITEO_PUBLISHER_ID);
-
-        if (adSize == null || criteoPublisherId == null) {
-            MoPubLog.log(LOAD_FAILED, TAG, "CriteoPublisherId cannot be null");
-            customEventBannerListener.onBannerFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
-            return;
-        }
-
-        String adUnitId = serverExtras.get(ADUNIT_ID);
-
-        if (adUnitId == null) {
-            MoPubLog.log(LOAD_FAILED, TAG, "Missing adUnit Id");
-            customEventBannerListener.onBannerFailed(MoPubErrorCode.MISSING_AD_UNIT_ID);
-            return;
-        }
-
-        criteoInitializer.init(context, criteoPublisherId);
-
-        try {
-            BannerAdUnit bannerAdUnit = new BannerAdUnit(adUnitId, adSize);
-            bannerView = new CriteoBannerView(context, bannerAdUnit);
-            CriteoBannerEventListener listener = new CriteoBannerEventListener(customEventBannerListener);
-            bannerView.setCriteoBannerAdListener(listener);
-            bannerView.loadAd();
-            MoPubLog.log(LOAD_ATTEMPTED, TAG, "BannerView is loading");
-        } catch (Exception e) {
-            MoPubLog.log(LOAD_FAILED, TAG, "Initialization failed");
-            customEventBannerListener.onBannerFailed(MoPubErrorCode.INTERNAL_ERROR);
-        }
+    val adUnitId = serverExtras[ADUNIT_ID]
+    if (adUnitId == null) {
+      MoPubLog.log(LOAD_FAILED, TAG, "Missing adUnit Id")
+      customEventBannerListener.onBannerFailed(MoPubErrorCode.MISSING_AD_UNIT_ID)
+      return
     }
 
-    @Override
-    protected void onInvalidate() {
-        if (bannerView != null) {
-            bannerView.destroy();
-        }
-    }
+    criteoInitializer.init(context, criteoPublisherId)
 
-    private AdSize getAdSize(Map<String, Object> localExtras) {
-        Object objHeight = localExtras.get(MOPUB_HEIGHT);
-        Object objWidth = localExtras.get(MOPUB_WIDTH);
-        if (objHeight == null || objWidth == null) {
-            return null;
-        }
-
-        Integer height = (Integer) objHeight;
-        Integer width = (Integer) objWidth;
-        return new AdSize(width, height);
+    try {
+      val bannerAdUnit = BannerAdUnit(adUnitId, adSize)
+      val listener = CriteoBannerEventListener(customEventBannerListener)
+      bannerView = CriteoBannerView(context, bannerAdUnit).apply {
+        setCriteoBannerAdListener(listener)
+        loadAd()
+      }
+      MoPubLog.log(LOAD_ATTEMPTED, TAG, "BannerView is loading")
+    } catch (e: Exception) {
+      MoPubLog.log(LOAD_FAILED, TAG, "Initialization failed")
+      customEventBannerListener.onBannerFailed(MoPubErrorCode.INTERNAL_ERROR)
     }
+  }
+
+  override fun onInvalidate() {
+    bannerView?.destroy()
+  }
+
+  private fun getAdSize(localExtras: Map<String, Any>): AdSize? {
+    val objHeight = localExtras[MOPUB_HEIGHT]
+    val objWidth = localExtras[MOPUB_WIDTH]
+    if (objHeight == null || objWidth == null) {
+      return null
+    }
+    val height = objHeight as Int
+    val width = objWidth as Int
+    return AdSize(width, height)
+  }
+
+  companion object {
+    private val TAG = CriteoBannerAdapter::class.java.simpleName
+    const val ADUNIT_ID = "adUnitId"
+    const val CRITEO_PUBLISHER_ID = "cpId"
+    const val MOPUB_WIDTH = "com_mopub_ad_width"
+    const val MOPUB_HEIGHT = "com_mopub_ad_height"
+  }
+
 }
