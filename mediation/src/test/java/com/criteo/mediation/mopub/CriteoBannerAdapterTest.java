@@ -23,7 +23,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import android.content.Context;
-import com.mopub.mobileads.CustomEventBanner.CustomEventBannerListener;
+import com.mopub.mobileads.AdData;
+import com.mopub.mobileads.AdLifecycleListener;
+import com.mopub.mobileads.BaseAdExtKt;
 import com.mopub.mobileads.MoPubErrorCode;
 import java.util.Arrays;
 import java.util.Collection;
@@ -96,7 +98,7 @@ public class CriteoBannerAdapterTest {
   private Context context;
 
   @Mock
-  private CustomEventBannerListener customEvenBannerListener;
+  private AdLifecycleListener.LoadListener loadListener;
 
   @Before
   public void setUp() {
@@ -106,8 +108,13 @@ public class CriteoBannerAdapterTest {
   @Test
   public void testCriteoInit() {
     // given
-    Map<String, Object> localExtras = setupLocalExtras(adSizeWidth, adSizeHeight);
     Map<String, String> serverExtras = setupServerExtras(adUnitId, publisherId);
+
+    AdData adData = new AdData.Builder()
+        .extras(serverExtras)
+        .adWidth(adSizeWidth)
+        .adHeight(adSizeHeight)
+        .build();
 
     MoPubErrorCode expectedError = MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR;
     if (publisherId != null && adSizeWidth != null && adSizeHeight != null && adUnitId == null) {
@@ -116,31 +123,16 @@ public class CriteoBannerAdapterTest {
     }
 
     // when
-    criteoBannerAdapter
-        .loadBanner(context, customEvenBannerListener, localExtras, serverExtras);
+    BaseAdExtKt.load(criteoBannerAdapter, context, loadListener, adData);
 
     // then
     if (shouldInitCriteo) {
       verify(criteoInitializer).init(context, "fake_publisher_id");
     } else {
       verify(criteoInitializer, never()).init(any(Context.class), anyString());
-      verify(customEvenBannerListener).onBannerFailed(expectedError);
-      verifyNoMoreInteractions(customEvenBannerListener);
+      verify(loadListener).onAdLoadFailed(expectedError);
+      verifyNoMoreInteractions(loadListener);
     }
-  }
-
-  private Map<String, Object> setupLocalExtras(Integer width, Integer height) {
-    Map<String, Object> localExtras = new HashMap<>();
-
-    if (height != null) {
-      localExtras.put(CriteoBannerAdapter.MOPUB_HEIGHT, height);
-    }
-
-    if (width != null) {
-      localExtras.put(CriteoBannerAdapter.MOPUB_WIDTH, width);
-    }
-
-    return localExtras;
   }
 
   private Map<String, String> setupServerExtras(String adUnitId, String publisherId) {

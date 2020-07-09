@@ -19,41 +19,39 @@ import com.criteo.mediation.mopub.ErrorCode.toMoPub
 import com.criteo.publisher.CriteoErrorCode
 import com.criteo.publisher.CriteoInterstitialAdDisplayListener
 import com.criteo.publisher.CriteoInterstitialAdListener
-import com.mopub.mobileads.CustomEventInterstitial
+import com.mopub.mobileads.AdLifecycleListener
 import com.mopub.mobileads.MoPubErrorCode.NETWORK_TIMEOUT
 
-class CriteoInterstitialEventListener(private val listener: CustomEventInterstitial.CustomEventInterstitialListener) :
-    CriteoInterstitialAdListener,
-    CriteoInterstitialAdDisplayListener {
+class CriteoInterstitialEventListener(
+    private val loadListener: AdLifecycleListener.LoadListener,
+    private val interactionListenerRef: () -> AdLifecycleListener.InteractionListener?
+) : CriteoInterstitialAdListener, CriteoInterstitialAdDisplayListener {
 
-  override fun onAdOpened() {
-    listener.onInterstitialShown()
-  }
-
-  override fun onAdClosed() {
-    listener.onInterstitialDismissed()
+  override fun onAdReadyToDisplay() {
+    loadListener.onAdLoaded()
   }
 
   override fun onAdFailedToReceive(code: CriteoErrorCode) {
-    listener.onInterstitialFailed(toMoPub(code))
-  }
-
-  override fun onAdLeftApplication() {
-    listener.onLeaveApplication()
-  }
-
-  override fun onAdClicked() {
-    listener.onInterstitialClicked()
-  }
-
-  override fun onAdReadyToDisplay() {
-    listener.onInterstitialLoaded()
+    loadListener.onAdLoadFailed(toMoPub(code))
   }
 
   override fun onAdFailedToDisplay(code: CriteoErrorCode) {
-    listener.onInterstitialFailed(NETWORK_TIMEOUT)
+    loadListener.onAdLoadFailed(NETWORK_TIMEOUT)
   }
 
+  override fun onAdOpened() {
+    interactionListenerRef()?.onAdShown()
+  }
+
+  override fun onAdClosed() {
+    interactionListenerRef()?.onAdDismissed()
+  }
+
+  override fun onAdClicked() {
+    interactionListenerRef()?.onAdClicked()
+  }
+
+  override fun onAdLeftApplication() {}
   override fun onAdReceived() {}
 
 }

@@ -26,7 +26,7 @@ import com.criteo.publisher.TestAdUnits;
 import com.criteo.publisher.mock.MockedDependenciesRule;
 import com.criteo.publisher.mock.SpyBean;
 import com.criteo.publisher.util.DeviceUtil;
-import com.mopub.mobileads.CustomEventBanner.CustomEventBannerListener;
+import com.mopub.mobileads.AdLifecycleListener;
 import com.mopub.mobileads.MoPubErrorCode;
 import org.junit.Before;
 import org.junit.Rule;
@@ -43,7 +43,7 @@ public class CriteoBannerAdapterDegradedTest {
   private DeviceUtil deviceUtil;
 
   @Mock
-  private CustomEventBannerListener listener;
+  private AdLifecycleListener.LoadListener loadListener;
 
   private BannerAdapterHelper adapterHelper;
 
@@ -61,11 +61,11 @@ public class CriteoBannerAdapterDegradedTest {
     loadBanner();
     loadBanner();
 
-    verify(listener, times(2)).onBannerFailed(MoPubErrorCode.NETWORK_NO_FILL);
+    verify(loadListener, times(2)).onAdLoadFailed(MoPubErrorCode.NETWORK_NO_FILL);
   }
 
   private void loadBanner() {
-    adapterHelper.loadBanner(TestAdUnits.BANNER_320_50, listener);
+    adapterHelper.loadBanner(TestAdUnits.BANNER_320_50, loadListener);
     mockedDependenciesRule.waitForIdleState();
   }
 

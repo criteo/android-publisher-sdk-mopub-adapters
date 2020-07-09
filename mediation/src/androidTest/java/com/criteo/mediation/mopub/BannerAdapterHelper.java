@@ -16,7 +16,6 @@
 
 package com.criteo.mediation.mopub;
 
-import static com.criteo.mediation.mopub.MoPubHelper.localExtras;
 import static com.criteo.mediation.mopub.MoPubHelper.serverExtras;
 import static com.criteo.publisher.CriteoUtil.TEST_CP_ID;
 import static com.criteo.publisher.concurrent.ThreadingUtil.runOnMainThreadAndWait;
@@ -25,7 +24,9 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import com.criteo.publisher.model.BannerAdUnit;
-import com.mopub.mobileads.CustomEventBanner.CustomEventBannerListener;
+import com.mopub.mobileads.AdData;
+import com.mopub.mobileads.AdLifecycleListener;
+import com.mopub.mobileads.BaseAdExtKt;
 import java.util.Map;
 
 public class BannerAdapterHelper {
@@ -40,15 +41,17 @@ public class BannerAdapterHelper {
     this.adapter = adapter;
   }
 
-  public void loadBanner(@NonNull BannerAdUnit adUnit, CustomEventBannerListener listener) {
+  public void loadBanner(@NonNull BannerAdUnit adUnit, AdLifecycleListener.LoadListener listener) {
     Map<String, String> serverExtras = serverExtras(TEST_CP_ID, adUnit.getAdUnitId());
-    Map<String, Object> localExtras = localExtras(
-        adUnit.getSize().getWidth(),
-        adUnit.getSize().getHeight()
-    );
+
+    AdData adData = new AdData.Builder()
+        .extras(serverExtras)
+        .adWidth(adUnit.getSize().getWidth())
+        .adHeight(adUnit.getSize().getHeight())
+        .build();
 
     runOnMainThreadAndWait(() -> {
-      adapter.loadBanner(context, listener, localExtras, serverExtras);
+      BaseAdExtKt.loadAd(adapter, context, listener, adData);
     });
   }
 

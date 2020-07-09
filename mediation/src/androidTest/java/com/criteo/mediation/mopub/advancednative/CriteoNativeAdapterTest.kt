@@ -177,7 +177,7 @@ class CriteoNativeAdapterTest {
 
   private fun givenMoPubResponseForCriteoAdapter(adUnit: NativeAdUnit): AdResponse {
     return AdResponse.Builder()
-        .setCustomEventClassName(NATIVE_ADAPTER_CLASS_NAME)
+        .setBaseAdClassName(NATIVE_ADAPTER_CLASS_NAME)
         .setServerExtras(mapOf(
             CRITEO_PUBLISHER_ID to TEST_CP_ID,
             ADUNIT_ID to adUnit.adUnitId
