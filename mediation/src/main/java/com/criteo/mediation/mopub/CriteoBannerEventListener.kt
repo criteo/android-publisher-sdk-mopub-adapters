@@ -18,28 +18,26 @@ package com.criteo.mediation.mopub
 import android.view.View
 import com.criteo.publisher.CriteoBannerAdListener
 import com.criteo.publisher.CriteoErrorCode
-import com.mopub.mobileads.CustomEventBanner
+import com.mopub.mobileads.AdLifecycleListener
 
-class CriteoBannerEventListener(private val listener: CustomEventBanner.CustomEventBannerListener) :
-    CriteoBannerAdListener {
+class CriteoBannerEventListener(
+    private val loadListener: AdLifecycleListener.LoadListener,
+    private val interactionListenerRef: () -> AdLifecycleListener.InteractionListener?
+) : CriteoBannerAdListener {
 
   override fun onAdReceived(view: View) {
-    listener.onBannerLoaded(view)
+    loadListener.onAdLoaded()
   }
 
   override fun onAdFailedToReceive(code: CriteoErrorCode) {
-    listener.onBannerFailed(ErrorCode.toMoPub(code))
-  }
-
-  override fun onAdLeftApplication() {
-    listener.onLeaveApplication()
+    loadListener.onAdLoadFailed(ErrorCode.toMoPub(code))
   }
 
   override fun onAdClicked() {
-    listener.onBannerClicked()
+    interactionListenerRef()?.onAdClicked()
   }
 
   override fun onAdOpened() {}
   override fun onAdClosed() {}
-
+  override fun onAdLeftApplication() {}
 }

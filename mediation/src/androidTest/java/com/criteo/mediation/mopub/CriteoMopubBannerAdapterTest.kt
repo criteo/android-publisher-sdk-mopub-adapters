@@ -34,7 +34,7 @@ import com.criteo.publisher.model.BannerAdUnit
 import com.criteo.publisher.view.WebViewLookup
 import com.criteo.publisher.view.lookForNonEmptyHtmlContent
 import com.criteo.publisher.view.simulateClickOnAd
-import com.mopub.mobileads.CustomEventBanner
+import com.mopub.mobileads.AdLifecycleListener
 import com.mopub.mobileads.MoPubErrorCode.NETWORK_NO_FILL
 import com.mopub.mobileads.MoPubErrorCode.NO_FILL
 import com.mopub.mobileads.MoPubView
@@ -72,7 +72,7 @@ class CriteoMopubBannerAdapterTest {
   private lateinit var redirection: Redirection
 
   @Mock
-  private lateinit var listener: CustomEventBanner.CustomEventBannerListener
+  private lateinit var loadListener: AdLifecycleListener.LoadListener
 
   @Mock
   private lateinit var bannerListener: MoPubView.BannerAdListener
@@ -145,14 +145,14 @@ class CriteoMopubBannerAdapterTest {
   }
 
   private fun loadValidBanner() {
-    adapterHelper.loadBanner(BANNER_320_50, listener)
+    adapterHelper.loadBanner(BANNER_320_50, loadListener)
     mockedDependenciesRule.waitForIdleState()
   }
 
   private fun checkMissFirstOpportunityBecauseOfBidCachingAndSucceedOnNextOne() {
-    inOrder(listener) {
-      verify(listener).onBannerFailed(NETWORK_NO_FILL)
-      verify(listener).onBannerLoaded(any<CriteoBannerView>())
+    inOrder(loadListener) {
+      verify(loadListener).onAdLoadFailed(NETWORK_NO_FILL)
+      verify(loadListener).onAdLoaded()
       verifyNoMoreInteractions()
     }
   }
@@ -164,7 +164,7 @@ class CriteoMopubBannerAdapterTest {
 
   private fun givenMoPubResponseForCriteoAdapter(adUnit: BannerAdUnit): AdResponse {
     return AdResponse.Builder()
-        .setCustomEventClassName(BANNER_ADAPTER_CLASS_NAME)
+        .setBaseAdClassName(BANNER_ADAPTER_CLASS_NAME)
         .setServerExtras(
             mapOf(
                 CRITEO_PUBLISHER_ID to TEST_CP_ID,

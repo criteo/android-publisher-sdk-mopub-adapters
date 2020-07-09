@@ -1,5 +1,6 @@
 package com.mopub.mobileads
 
+import com.criteo.publisher.concurrent.ThreadingUtil.runOnMainThreadAndWait
 import com.mopub.mobileads.MoPubInterstitial.InterstitialState.LOADING
 import com.mopub.network.AdResponse
 
@@ -11,5 +12,7 @@ import com.mopub.network.AdResponse
  */
 fun MoPubInterstitial.loadAd(adResponse: AdResponse) {
   currentInterstitialState = LOADING
-  moPubInterstitialView.loadAd(adResponse)
+  runOnMainThreadAndWait {
+    getAdViewController()?.onAdLoadSuccess(adResponse)
+  }
 }

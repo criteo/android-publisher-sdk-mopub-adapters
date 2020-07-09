@@ -15,46 +15,49 @@
  */
 package com.criteo.mediation.mopub
 
+import android.app.Activity
 import android.content.Context
 import com.criteo.publisher.CriteoInterstitial
 import com.criteo.publisher.model.InterstitialAdUnit
+import com.mopub.common.LifecycleListener
 import com.mopub.common.VisibleForTesting
 import com.mopub.common.logging.MoPubLog.AdapterLogEvent.LOAD_ATTEMPTED
 import com.mopub.common.logging.MoPubLog.AdapterLogEvent.LOAD_FAILED
-import com.mopub.mobileads.CustomEventInterstitial
-import com.mopub.mobileads.MoPubErrorCode
+import com.mopub.mobileads.AdData
+import com.mopub.mobileads.BaseAd
+import com.mopub.mobileads.MoPubErrorCode.*
 
 class CriteoInterstitialAdapter @VisibleForTesting internal constructor(
     private val criteoInitializer: CriteoInitializer
-) : CustomEventInterstitial() {
+) : BaseAd() {
 
   private var criteoInterstitial: CriteoInterstitial? = null
 
   constructor() : this(CriteoInitializer())
 
-  public override fun loadInterstitial(
-      context: Context,
-      customEventInterstitialListener: CustomEventInterstitialListener,
-      localExtras: Map<String, Any>,
-      serverExtras: Map<String, String>?
-  ) {
-    if (serverExtras == null || serverExtras.isEmpty()) {
+  override fun getLifecycleListener(): LifecycleListener? = null
+  override fun getAdNetworkId() = ""
+  override fun checkAndInitializeSdk(launcherActivity: Activity, adData: AdData) = false
+
+  override fun load(context: Context, adData: AdData) {
+    val serverExtras = adData.extras
+    if (serverExtras.isEmpty()) {
       MoPubLog.log(LOAD_FAILED, TAG, "Server parameters are empty")
-      customEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR)
+      mLoadListener.onAdLoadFailed(ADAPTER_CONFIGURATION_ERROR)
       return
     }
 
     val criteoPublisherId = serverExtras[CRITEO_PUBLISHER_ID]
     if (criteoPublisherId == null) {
       MoPubLog.log(LOAD_FAILED, TAG, "CriteoPublisherId cannot be null")
-      customEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR)
+      mLoadListener.onAdLoadFailed(ADAPTER_CONFIGURATION_ERROR)
       return
     }
 
     val adUnitId = serverExtras[ADUNIT_ID]
     if (adUnitId == null) {
       MoPubLog.log(LOAD_FAILED, TAG, "Missing adunit Id")
-      customEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.MISSING_AD_UNIT_ID)
+      mLoadListener.onAdLoadFailed(MISSING_AD_UNIT_ID)
       return
     }
 
@@ -62,7 +65,7 @@ class CriteoInterstitialAdapter @VisibleForTesting internal constructor(
 
     try {
       val interstitialAdUnit = InterstitialAdUnit(adUnitId)
-      val listener = CriteoInterstitialEventListener(customEventInterstitialListener)
+      val listener = CriteoInterstitialEventListener(mLoadListener) { mInteractionListener }
       criteoInterstitial = CriteoInterstitial(context, interstitialAdUnit).apply {
         setCriteoInterstitialAdListener(listener)
         setCriteoInterstitialAdDisplayListener(listener)
@@ -71,17 +74,15 @@ class CriteoInterstitialAdapter @VisibleForTesting internal constructor(
       MoPubLog.log(LOAD_ATTEMPTED, TAG, "Criteo Interstitial is loading")
     } catch (e: Exception) {
       MoPubLog.log(LOAD_FAILED, TAG, "Initialization failed")
-      customEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.INTERNAL_ERROR)
+      mLoadListener.onAdLoadFailed(INTERNAL_ERROR)
     }
   }
 
-  override fun showInterstitial() {
+  override fun show() {
     criteoInterstitial?.show()
   }
 
-  override fun onInvalidate() {
-
-  }
+  override fun onInvalidate() {}
 
   companion object {
     private val TAG = CriteoInterstitialAdapter::class.java.simpleName

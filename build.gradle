@@ -37,7 +37,6 @@ allprojects {
         google()
         jcenter()
         mavenLocal()
-        maven { url "https://s3.amazonaws.com/moat-sdk-builds" }
     }
 }
 

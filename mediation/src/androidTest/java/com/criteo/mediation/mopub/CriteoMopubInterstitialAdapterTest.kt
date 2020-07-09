@@ -35,7 +35,7 @@ import com.criteo.publisher.view.WebViewLookup
 import com.criteo.publisher.view.WebViewLookup.getRootView
 import com.criteo.publisher.view.lookForNonEmptyHtmlContent
 import com.criteo.publisher.view.simulateClickOnAd
-import com.mopub.mobileads.CustomEventInterstitial
+import com.mopub.mobileads.AdLifecycleListener
 import com.mopub.mobileads.MoPubErrorCode.NETWORK_NO_FILL
 import com.mopub.mobileads.MoPubErrorCode.NO_FILL
 import com.mopub.mobileads.MoPubInterstitial
@@ -69,7 +69,7 @@ class CriteoMopubInterstitialAdapterTest {
   private lateinit var redirection: Redirection
 
   @Mock
-  private lateinit var listener: CustomEventInterstitial.CustomEventInterstitialListener
+  private lateinit var loadListener: AdLifecycleListener.LoadListener
 
   @Mock
   private lateinit var interstitialListener: MoPubInterstitial.InterstitialAdListener
@@ -159,14 +159,14 @@ class CriteoMopubInterstitialAdapterTest {
   }
 
   private fun loadValidInterstitial() {
-    adapterHelper.loadInterstitial(INTERSTITIAL, listener)
+    adapterHelper.loadInterstitial(INTERSTITIAL, loadListener)
     mockedDependenciesRule.waitForIdleState()
   }
 
   private fun checkMissFirstOpportunityBecauseOfBidCachingAndSucceedOnNextOne() {
-    inOrder(listener) {
-      verify(listener).onInterstitialFailed(NETWORK_NO_FILL)
-      verify(listener).onInterstitialLoaded()
+    inOrder(loadListener) {
+      verify(loadListener).onAdLoadFailed(NETWORK_NO_FILL)
+      verify(loadListener).onAdLoaded()
       verifyNoMoreInteractions()
     }
   }
@@ -178,7 +178,7 @@ class CriteoMopubInterstitialAdapterTest {
 
   private fun givenMoPubResponseForCriteoAdapter(adUnit: InterstitialAdUnit): AdResponse {
     return AdResponse.Builder()
-        .setCustomEventClassName(INTERSTITIAL_ADAPTER_CLASS_NAME)
+        .setBaseAdClassName(INTERSTITIAL_ADAPTER_CLASS_NAME)
         .setServerExtras(
             mapOf(
                 CRITEO_PUBLISHER_ID to TEST_CP_ID,

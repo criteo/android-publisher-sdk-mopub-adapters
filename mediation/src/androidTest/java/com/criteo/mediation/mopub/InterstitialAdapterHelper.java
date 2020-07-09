@@ -24,8 +24,9 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import com.criteo.publisher.model.InterstitialAdUnit;
-import com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
-import java.util.HashMap;
+import com.mopub.mobileads.AdData;
+import com.mopub.mobileads.AdLifecycleListener;
+import com.mopub.mobileads.BaseAdExtKt;
 import java.util.Map;
 
 public class InterstitialAdapterHelper {
@@ -40,12 +41,18 @@ public class InterstitialAdapterHelper {
     this.adapter = adapter;
   }
 
-  public void loadInterstitial(@NonNull InterstitialAdUnit adUnit, CustomEventInterstitialListener listener) {
+  public void loadInterstitial(
+      @NonNull InterstitialAdUnit adUnit,
+      AdLifecycleListener.LoadListener listener
+  ) {
     Map<String, String> serverExtras = serverExtras(TEST_CP_ID, adUnit.getAdUnitId());
-    Map<String, Object> localExtras = new HashMap<>();
+
+    AdData adData = new AdData.Builder()
+        .extras(serverExtras)
+        .build();
 
     runOnMainThreadAndWait(() -> {
-      adapter.loadInterstitial(context, listener, localExtras, serverExtras);
+      BaseAdExtKt.loadAd(adapter, context, listener, adData);
     });
   }
 

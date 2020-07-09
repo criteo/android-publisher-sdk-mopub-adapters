@@ -26,7 +26,7 @@ import com.criteo.publisher.TestAdUnits;
 import com.criteo.publisher.mock.MockedDependenciesRule;
 import com.criteo.publisher.mock.SpyBean;
 import com.criteo.publisher.util.DeviceUtil;
-import com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
+import com.mopub.mobileads.AdLifecycleListener;
 import com.mopub.mobileads.MoPubErrorCode;
 import org.junit.Before;
 import org.junit.Rule;
@@ -43,7 +43,7 @@ public class CriteoInterstitialAdapterDegradedTest {
   private DeviceUtil deviceUtil;
 
   @Mock
-  private CustomEventInterstitialListener listener;
+  private AdLifecycleListener.LoadListener loadListener;
 
   private InterstitialAdapterHelper adapterHelper;
 
@@ -60,11 +60,11 @@ public class CriteoInterstitialAdapterDegradedTest {
     loadInterstitial();
     loadInterstitial();
 
-    verify(listener, times(2)).onInterstitialFailed(MoPubErrorCode.NETWORK_NO_FILL);
+    verify(loadListener, times(2)).onAdLoadFailed(MoPubErrorCode.NETWORK_NO_FILL);
   }
 
   private void loadInterstitial() {
-    adapterHelper.loadInterstitial(TestAdUnits.INTERSTITIAL, listener);
+    adapterHelper.loadInterstitial(TestAdUnits.INTERSTITIAL, loadListener);
     mockedDependenciesRule.waitForIdleState();
   }
 

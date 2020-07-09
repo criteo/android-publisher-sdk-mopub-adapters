@@ -11,6 +11,6 @@ import com.mopub.network.AdResponse
  */
 fun MoPubView.loadAd(adResponse: AdResponse) {
   runOnMainThreadAndWait {
-    adViewController.onAdLoadSuccess(adResponse)
+    getAdViewController()?.onAdLoadSuccess(adResponse)
   }
 }

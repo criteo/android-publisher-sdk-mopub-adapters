@@ -23,7 +23,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import android.content.Context;
-import com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
+import com.mopub.mobileads.AdData;
+import com.mopub.mobileads.AdLifecycleListener;
+import com.mopub.mobileads.BaseAdExtKt;
 import com.mopub.mobileads.MoPubErrorCode;
 import java.util.Arrays;
 import java.util.Collection;
@@ -69,7 +71,7 @@ public class CriteoInterstitialAdapterTest {
   private Context context;
 
   @Mock
-  private CustomEventInterstitialListener customEvenBannerListener;
+  private AdLifecycleListener.LoadListener loadListener;
 
   @Before
   public void setUp() {
@@ -80,6 +82,7 @@ public class CriteoInterstitialAdapterTest {
   public void testCriteoInit() {
     // given
     Map<String, String> serverExtras = setupServerExtras(adUnitId, publisherId);
+    AdData adData = new AdData.Builder().extras(serverExtras).build();
 
     MoPubErrorCode expectedError = MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR;
     if (publisherId != null && adUnitId == null) {
@@ -88,21 +91,15 @@ public class CriteoInterstitialAdapterTest {
     }
 
     // when
-    criteoInterstitialAdapter
-        .loadInterstitial(
-            context,
-            customEvenBannerListener,
-            new HashMap<String, Object>(),
-            serverExtras
-        );
+    BaseAdExtKt.load(criteoInterstitialAdapter, context, loadListener, adData);
 
     // then
     if (shouldInitCriteo) {
       verify(criteoInitializer).init(context, "fake_publisher_id");
     } else {
       verify(criteoInitializer, never()).init(any(Context.class), anyString());
-      verify(customEvenBannerListener).onInterstitialFailed(expectedError);
-      verifyNoMoreInteractions(customEvenBannerListener);
+      verify(loadListener).onAdLoadFailed(expectedError);
+      verifyNoMoreInteractions(loadListener);
     }
   }
 
