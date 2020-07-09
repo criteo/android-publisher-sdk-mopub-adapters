@@ -13,63 +13,47 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+package com.criteo.mediation.mopub
 
-package com.criteo.mediation.mopub;
+import com.criteo.mediation.mopub.ErrorCode.toMoPub
+import com.criteo.publisher.CriteoErrorCode
+import com.criteo.publisher.CriteoInterstitialAdDisplayListener
+import com.criteo.publisher.CriteoInterstitialAdListener
+import com.mopub.mobileads.CustomEventInterstitial
+import com.mopub.mobileads.MoPubErrorCode.NETWORK_TIMEOUT
 
-import androidx.annotation.NonNull;
-import com.criteo.publisher.CriteoErrorCode;
-import com.criteo.publisher.CriteoInterstitialAdDisplayListener;
-import com.criteo.publisher.CriteoInterstitialAdListener;
-import com.mopub.mobileads.CustomEventInterstitial.CustomEventInterstitialListener;
-import com.mopub.mobileads.MoPubErrorCode;
+class CriteoInterstitialEventListener(private val listener: CustomEventInterstitial.CustomEventInterstitialListener) :
+    CriteoInterstitialAdListener,
+    CriteoInterstitialAdDisplayListener {
 
-public class CriteoInterstitialEventListener implements CriteoInterstitialAdListener,
-        CriteoInterstitialAdDisplayListener {
+  override fun onAdOpened() {
+    listener.onInterstitialShown()
+  }
 
-    @NonNull
-    private final CustomEventInterstitialListener customEventInterstitialListener;
+  override fun onAdClosed() {
+    listener.onInterstitialDismissed()
+  }
 
-    public CriteoInterstitialEventListener(@NonNull CustomEventInterstitialListener listener) {
-        customEventInterstitialListener = listener;
-    }
+  override fun onAdFailedToReceive(code: CriteoErrorCode) {
+    listener.onInterstitialFailed(toMoPub(code))
+  }
 
-    @Override
-    public void onAdOpened() {
-        customEventInterstitialListener.onInterstitialShown();
-    }
+  override fun onAdLeftApplication() {
+    listener.onLeaveApplication()
+  }
 
-    @Override
-    public void onAdClosed() {
-        customEventInterstitialListener.onInterstitialDismissed();
-    }
+  override fun onAdClicked() {
+    listener.onInterstitialClicked()
+  }
 
-    @Override
-    public void onAdFailedToReceive(CriteoErrorCode code) {
-        customEventInterstitialListener.onInterstitialFailed(ErrorCode.toMoPub(code));
-    }
+  override fun onAdReadyToDisplay() {
+    listener.onInterstitialLoaded()
+  }
 
-    @Override
-    public void onAdLeftApplication() {
-        customEventInterstitialListener.onLeaveApplication();
-    }
+  override fun onAdFailedToDisplay(code: CriteoErrorCode) {
+    listener.onInterstitialFailed(NETWORK_TIMEOUT)
+  }
 
-    @Override
-    public void onAdClicked() {
-        customEventInterstitialListener.onInterstitialClicked();
-    }
-
-    @Override
-    public void onAdReadyToDisplay() {
-        customEventInterstitialListener.onInterstitialLoaded();
-    }
-
-    @Override
-    public void onAdFailedToDisplay(CriteoErrorCode code) {
-        customEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.NETWORK_TIMEOUT);
-    }
-
-    @Override
-    public void onAdReceived() {
-    }
+  override fun onAdReceived() {}
 
 }
