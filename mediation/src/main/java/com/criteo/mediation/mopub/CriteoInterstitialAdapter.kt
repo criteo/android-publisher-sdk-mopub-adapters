@@ -13,92 +13,80 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+package com.criteo.mediation.mopub
 
-package com.criteo.mediation.mopub;
+import android.content.Context
+import com.criteo.publisher.CriteoInterstitial
+import com.criteo.publisher.model.InterstitialAdUnit
+import com.mopub.common.VisibleForTesting
+import com.mopub.common.logging.MoPubLog.AdapterLogEvent.LOAD_ATTEMPTED
+import com.mopub.common.logging.MoPubLog.AdapterLogEvent.LOAD_FAILED
+import com.mopub.mobileads.CustomEventInterstitial
+import com.mopub.mobileads.MoPubErrorCode
 
-import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.LOAD_ATTEMPTED;
-import static com.mopub.common.logging.MoPubLog.AdapterLogEvent.LOAD_FAILED;
+class CriteoInterstitialAdapter @VisibleForTesting internal constructor(
+    private val criteoInitializer: CriteoInitializer
+) : CustomEventInterstitial() {
 
-import android.content.Context;
-import androidx.annotation.NonNull;
-import com.criteo.publisher.CriteoInterstitial;
-import com.criteo.publisher.model.InterstitialAdUnit;
-import com.mopub.common.VisibleForTesting;
-import com.mopub.common.logging.MoPubLog;
-import com.mopub.mobileads.CustomEventInterstitial;
-import com.mopub.mobileads.MoPubErrorCode;
-import java.util.Map;
+  private var criteoInterstitial: CriteoInterstitial? = null
 
-public class CriteoInterstitialAdapter extends CustomEventInterstitial {
+  constructor() : this(CriteoInitializer())
 
-    private static final String TAG = CriteoInterstitialAdapter.class.getSimpleName();
-    protected static final String ADUNIT_ID = "adUnitId";
-    protected static final String CRITEO_PUBLISHER_ID = "cpId";
-    private CriteoInterstitial criteoInterstitial;
-
-    private final CriteoInitializer criteoInitializer;
-
-    public CriteoInterstitialAdapter() {
-        this(new CriteoInitializer());
+  public override fun loadInterstitial(
+      context: Context,
+      customEventInterstitialListener: CustomEventInterstitialListener,
+      localExtras: Map<String, Any>,
+      serverExtras: Map<String, String>?
+  ) {
+    if (serverExtras == null || serverExtras.isEmpty()) {
+      MoPubLog.log(LOAD_FAILED, TAG, "Server parameters are empty")
+      customEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR)
+      return
     }
 
-    @VisibleForTesting
-    CriteoInterstitialAdapter(@NonNull CriteoInitializer criteoInitializer) {
-        this.criteoInitializer = criteoInitializer;
+    val criteoPublisherId = serverExtras[CRITEO_PUBLISHER_ID]
+    if (criteoPublisherId == null) {
+      MoPubLog.log(LOAD_FAILED, TAG, "CriteoPublisherId cannot be null")
+      customEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR)
+      return
     }
 
-    @Override
-    protected void loadInterstitial(Context context, CustomEventInterstitialListener customEventInterstitialListener,
-            Map<String, Object> localExtras, Map<String, String> serverExtras) {
-
-        if (serverExtras == null || serverExtras.isEmpty()) {
-            MoPubLog.log(LOAD_FAILED, TAG, "Server parameters are empty");
-            customEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
-            return;
-        }
-
-        String criteoPublisherId = serverExtras.get(CRITEO_PUBLISHER_ID);
-
-        if (criteoPublisherId == null) {
-            MoPubLog.log(LOAD_FAILED, TAG, "CriteoPublisherId cannot be null");
-            customEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.ADAPTER_CONFIGURATION_ERROR);
-            return;
-        }
-
-        String adUnitId = serverExtras.get(ADUNIT_ID);
-
-        if (adUnitId == null) {
-            MoPubLog.log(LOAD_FAILED, TAG, "Missing adunit Id");
-            customEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.MISSING_AD_UNIT_ID);
-            return;
-        }
-
-        criteoInitializer.init(context, criteoPublisherId);
-
-        try {
-            InterstitialAdUnit interstitialAdUnit = new InterstitialAdUnit(adUnitId);
-            criteoInterstitial = new CriteoInterstitial(context, interstitialAdUnit);
-            CriteoInterstitialEventListener listener = new CriteoInterstitialEventListener(
-                    customEventInterstitialListener);
-            criteoInterstitial.setCriteoInterstitialAdListener(listener);
-            criteoInterstitial.setCriteoInterstitialAdDisplayListener(listener);
-            criteoInterstitial.loadAd();
-            MoPubLog.log(LOAD_ATTEMPTED, TAG, "Criteo Interstitial is loading");
-        } catch (Exception e) {
-            MoPubLog.log(LOAD_FAILED, TAG, "Initialization failed");
-            customEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.INTERNAL_ERROR);
-        }
+    val adUnitId = serverExtras[ADUNIT_ID]
+    if (adUnitId == null) {
+      MoPubLog.log(LOAD_FAILED, TAG, "Missing adunit Id")
+      customEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.MISSING_AD_UNIT_ID)
+      return
     }
 
-    @Override
-    protected void showInterstitial() {
-        if (criteoInterstitial != null) {
-            criteoInterstitial.show();
-        }
-    }
+    criteoInitializer.init(context, criteoPublisherId)
 
-    @Override
-    protected void onInvalidate() {
-
+    try {
+      val interstitialAdUnit = InterstitialAdUnit(adUnitId)
+      val listener = CriteoInterstitialEventListener(customEventInterstitialListener)
+      criteoInterstitial = CriteoInterstitial(context, interstitialAdUnit).apply {
+        setCriteoInterstitialAdListener(listener)
+        setCriteoInterstitialAdDisplayListener(listener)
+        loadAd()
+      }
+      MoPubLog.log(LOAD_ATTEMPTED, TAG, "Criteo Interstitial is loading")
+    } catch (e: Exception) {
+      MoPubLog.log(LOAD_FAILED, TAG, "Initialization failed")
+      customEventInterstitialListener.onInterstitialFailed(MoPubErrorCode.INTERNAL_ERROR)
     }
+  }
+
+  override fun showInterstitial() {
+    criteoInterstitial?.show()
+  }
+
+  override fun onInvalidate() {
+
+  }
+
+  companion object {
+    private val TAG = CriteoInterstitialAdapter::class.java.simpleName
+    private const val ADUNIT_ID = "adUnitId"
+    private const val CRITEO_PUBLISHER_ID = "cpId"
+  }
+
 }
