@@ -251,9 +251,4 @@ class CriteoNativeAdapterTest {
     verify(nativeEventListener, quantifier).onClick(anyOrNull())
   }
 
-  private fun waitForPicasso() {
-
-    Thread.sleep(1000)
-  }
-
 }
