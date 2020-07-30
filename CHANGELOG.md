@@ -15,10 +15,6 @@ removed.
 ## 3.7.0.0
 * Added support for Advanced NativeAds.
 
-## 3.6.1.0
-
-## 3.6.0.0
-
 ## 3.5.0.0
 * Added support for TCF2
 
