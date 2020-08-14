@@ -4,6 +4,7 @@ Note that all version `X.Y.Z.T` of this adapter have been tested against the mat
 `X.Y.Z` of the Publisher SDK.
 
 ## Next
+* Fix visibility over the Criteo SDK at compile time for Advanced Native
 
 ## 3.8.0.0
 * Refactor non-native adapter classes to use the new consolidated API from MoPub.

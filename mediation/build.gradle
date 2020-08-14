@@ -80,11 +80,11 @@ dependencies {
     def mopubVersion = "5.13.1"
 
     if (isSnapshot) {
-        releaseImplementation("com.criteo.publisher:criteo-publisher-sdk-development:$sdk_version+")
+        releaseApi("com.criteo.publisher:criteo-publisher-sdk-development:$sdk_version+")
     } else {
-        releaseImplementation("com.criteo.publisher:criteo-publisher-sdk:$sdk_version")
+        releaseApi("com.criteo.publisher:criteo-publisher-sdk:$sdk_version")
     }
-    debugImplementation("com.criteo.publisher:criteo-publisher-sdk-debug:$sdk_version+")
+    debugApi("com.criteo.publisher:criteo-publisher-sdk-debug:$sdk_version+")
 
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
 
