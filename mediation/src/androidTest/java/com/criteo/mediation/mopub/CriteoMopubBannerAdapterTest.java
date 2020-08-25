@@ -1,23 +1,13 @@
 package com.criteo.mediation.mopub;
 
-import static com.criteo.mediation.mopub.MoPubHelper.localExtras;
-import static com.criteo.mediation.mopub.MoPubHelper.serverExtras;
-import static com.criteo.publisher.CriteoUtil.clearCriteo;
-import static com.criteo.publisher.CriteoUtil.givenInitializedCriteo;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.inOrder;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-
 import android.content.Context;
-import androidx.test.core.app.ApplicationProvider;
 import com.criteo.publisher.CriteoBannerView;
-import com.criteo.publisher.TestAdUnits;
 import com.criteo.publisher.mock.MockedDependenciesRule;
+import com.criteo.publisher.mock.SpyBean;
+import com.criteo.publisher.network.PubSdkApi;
 import com.mopub.mobileads.CustomEventBanner;
 import com.mopub.mobileads.MoPubErrorCode;
-import java.util.HashMap;
-import java.util.Map;
+import com.mopub.mobileads.MoPubView;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -25,11 +15,26 @@ import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import javax.inject.Inject;
+import java.util.HashMap;
+import java.util.Map;
+
+import static com.criteo.mediation.mopub.MoPubHelper.localExtras;
+import static com.criteo.mediation.mopub.MoPubHelper.serverExtras;
+import static com.criteo.publisher.CriteoUtil.clearCriteo;
+import static com.criteo.publisher.CriteoUtil.givenInitializedCriteo;
+import static com.criteo.publisher.TestAdUnits.BANNER_320_50;
+import static com.criteo.publisher.concurrent.ThreadingUtil.callOnMainThreadAndWait;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 public class CriteoMopubBannerAdapterTest {
 
     @Rule
     public MockedDependenciesRule mockedDependenciesRule = new MockedDependenciesRule();
 
+    @Inject
     private Context context;
 
     private CriteoBannerAdapter adapter;
@@ -38,15 +43,36 @@ public class CriteoMopubBannerAdapterTest {
     @Mock
     private CustomEventBanner.CustomEventBannerListener listener;
 
+    @Mock
+    private MoPubView.BannerAdListener bannerListener;
+
+    @SpyBean
+    private PubSdkApi api;
+
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
         clearCriteo();
 
-        context = ApplicationProvider.getApplicationContext();
-
         adapter = new CriteoBannerAdapter();
         adapterHelper = new BannerAdapterHelper(adapter);
+    }
+
+    @Test
+    public void reproduceCpIdIssue() throws Exception {
+        // When
+        mockedDependenciesRule.waitForIdleState();
+
+        MoPubView moPubView = callOnMainThreadAndWait(() -> new MoPubView(context));
+        moPubView.setBannerAdListener(bannerListener);
+        BannerTestUtilsKt.loadAd(moPubView);
+        mockedDependenciesRule.waitForIdleState();
+
+        // Then
+        verify(api).loadCdb(argThat(request -> {
+            assertThat(request.getPublisher().getCriteoPublisherId()).isEqualTo("B-000001");
+            return true;
+        }), any());
     }
 
     @Test
@@ -110,7 +136,7 @@ public class CriteoMopubBannerAdapterTest {
     }
 
     private void loadValidBanner() {
-        adapterHelper.loadBanner(TestAdUnits.BANNER_320_50, listener);
+        adapterHelper.loadBanner(BANNER_320_50, listener);
         mockedDependenciesRule.waitForIdleState();
     }
 

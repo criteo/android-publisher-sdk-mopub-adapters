@@ -48,12 +48,19 @@ android {
     }
 }
 
+configurations.all {
+    resolutionStrategy {
+        // Picasso wants an old version, but MockWebServer needs a recent one.
+        force("com.squareup.okhttp3:okhttp:4.7.2")
+    }
+}
+
 dependencies {
     def mopubVersion = "5.10.0"
 
     // TODO EE-916 Publish SNAPSHOT release of the SDK and use them as a dependency instead of
     //  relying on dynamic version.
-    releaseImplementation("com.criteo.publisher:criteo-publisher-sdk:$sdk_version+")
+    releaseImplementation("com.criteo.publisher:criteo-publisher-sdk:$sdk_version")
     debugImplementation("com.criteo.publisher:criteo-publisher-sdk-debug:$sdk_version+")
 
     compileOnly("androidx.annotation:annotation:1.0.0")
