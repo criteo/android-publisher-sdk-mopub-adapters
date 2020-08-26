@@ -162,6 +162,14 @@ def publicationDescription = "Criteo Direct Bidding for App solution with MoPub 
 def publicationWebsite = "https://publisherdocs.criteotilt.com/app/android/mediation/mopub/"
 def githubUrl = "https://github.com/criteo/android-publisher-sdk-mopub-adapters"
 
+def groupId = "com.criteo.mediation.mopub"
+def artifactId
+if (isSnapshot) {
+    artifactId = "criteo-adapter-development"
+} else {
+    artifactId = "criteo-adapter"
+}
+
 publishing {
     publications {
         release(MavenPublication) {
@@ -171,14 +179,9 @@ publishing {
                 artifact(tasks["generateReleaseJavadocJar"])
             }
 
-            groupId = "com.criteo.mediation.mopub"
+            it.groupId = groupId
+            it.artifactId = artifactId
             version adapter_publication_version
-
-            if (isSnapshot) {
-                artifactId = "criteo-adapter-development"
-            } else {
-                artifactId = "criteo-adapter"
-            }
 
             pom {
                 withXml {
@@ -227,7 +230,19 @@ bintray {
     pkg {
         repo = "mobile"
         userOrg = "criteo"
-        name = "publisher-sdk-mopub-adapters"
+
+        // Use different package name for debug and release artifacts:
+        // The synchronization with JCenter was done when only debug artifacts were present. Now,
+        // when release artifacts are pushed in the debug package, they are not synchronized on
+        // JCenter.
+        // It does not seem possible to reset the synchronization. Hence, a new package dedicated
+        // to release artifacts is used.
+        if (isSnapshot) {
+            name = "publisher-sdk-mopub-adapters"
+        } else {
+            name = "$groupId:$artifactId"
+        }
+
         desc = publicationDescription
         websiteUrl = publicationWebsite
         vcsUrl = githubUrl
