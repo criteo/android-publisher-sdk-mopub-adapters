@@ -17,7 +17,7 @@ package com.criteo.mediation.mopub
 
 import com.criteo.mediation.mopub.ErrorCode.toMoPub
 import com.criteo.publisher.CriteoErrorCode
-import com.criteo.publisher.CriteoInterstitialAdDisplayListener
+import com.criteo.publisher.CriteoInterstitial
 import com.criteo.publisher.CriteoInterstitialAdListener
 import com.mopub.mobileads.AdLifecycleListener
 import com.mopub.mobileads.MoPubErrorCode.NETWORK_TIMEOUT
@@ -25,18 +25,14 @@ import com.mopub.mobileads.MoPubErrorCode.NETWORK_TIMEOUT
 class CriteoInterstitialEventListener(
     private val loadListener: AdLifecycleListener.LoadListener,
     private val interactionListenerRef: () -> AdLifecycleListener.InteractionListener?
-) : CriteoInterstitialAdListener, CriteoInterstitialAdDisplayListener {
+) : CriteoInterstitialAdListener {
 
-  override fun onAdReadyToDisplay() {
+  override fun onAdReceived(interstitial: CriteoInterstitial) {
     loadListener.onAdLoaded()
   }
 
   override fun onAdFailedToReceive(code: CriteoErrorCode) {
     loadListener.onAdLoadFailed(toMoPub(code))
-  }
-
-  override fun onAdFailedToDisplay(code: CriteoErrorCode) {
-    loadListener.onAdLoadFailed(NETWORK_TIMEOUT)
   }
 
   override fun onAdOpened() {
@@ -52,6 +48,5 @@ class CriteoInterstitialEventListener(
   }
 
   override fun onAdLeftApplication() {}
-  override fun onAdReceived() {}
 
 }

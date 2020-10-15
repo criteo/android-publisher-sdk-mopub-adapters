@@ -66,9 +66,8 @@ class CriteoInterstitialAdapter @VisibleForTesting internal constructor(
     try {
       val interstitialAdUnit = InterstitialAdUnit(adUnitId)
       val listener = CriteoInterstitialEventListener(mLoadListener) { mInteractionListener }
-      criteoInterstitial = CriteoInterstitial(context, interstitialAdUnit).apply {
+      criteoInterstitial = CriteoInterstitial(interstitialAdUnit).apply {
         setCriteoInterstitialAdListener(listener)
-        setCriteoInterstitialAdDisplayListener(listener)
         loadAd()
       }
       MoPubLog.log(LOAD_ATTEMPTED, TAG, "Criteo Interstitial is loading")

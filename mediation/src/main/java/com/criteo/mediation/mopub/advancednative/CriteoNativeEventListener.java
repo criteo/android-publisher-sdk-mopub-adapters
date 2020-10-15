@@ -25,7 +25,7 @@ import com.criteo.publisher.advancednative.CriteoNativeAd;
 import com.criteo.publisher.advancednative.CriteoNativeAdListener;
 import com.mopub.nativeads.CustomEventNative.CustomEventNativeListener;
 
-class CriteoNativeEventListener extends CriteoNativeAdListener {
+class CriteoNativeEventListener implements CriteoNativeAdListener {
 
   @NonNull
   private final CustomEventNativeListener customEventNativeListener;
