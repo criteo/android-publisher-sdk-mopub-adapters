@@ -10,11 +10,10 @@ import com.criteo.publisher.integration.Integration.MOPUB_MEDIATION
 import com.criteo.publisher.mock.MockedDependenciesRule
 import com.criteo.publisher.mock.SpyBean
 import com.criteo.publisher.network.PubSdkApi
-import com.nhaarman.mockitokotlin2.any
-import com.nhaarman.mockitokotlin2.check
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.verify
+import com.criteo.publisher.privacy.ConsentData
+import com.nhaarman.mockitokotlin2.*
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
@@ -29,6 +28,14 @@ class ProfileIdFunctionalTest {
 
   @SpyBean
   private lateinit var api: PubSdkApi
+
+  @SpyBean
+  private lateinit var consentData: ConsentData
+
+  @Before
+  fun setUp() {
+    whenever(consentData.isConsentGiven()).thenReturn(true)
+  }
 
   @Test
   fun loadBanner_GivenSdkUsedOrNot_UseAdapterProfileIdInAllRequests() {
