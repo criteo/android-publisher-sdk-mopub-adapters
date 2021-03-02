@@ -3,6 +3,9 @@
 Note that all version `X.Y.Z.T` of this adapter have been tested against the matching version
 `X.Y.Z` of the Publisher SDK.
 
+## Version 4.3.0.0
+* No changes on the adapter.
+
 ## Version 3.10.1.0
 * No changes on the adapter.
 
