@@ -3,6 +3,10 @@
 Note that all version `X.Y.Z.T` of this adapter have been tested against the matching version
 `X.Y.Z` of the Publisher SDK.
 
+## Next version
+* Artifacts are now delivered through `Maven Central` repository instead of `JCenter` which is 
+  deprecated.
+
 ## Version 4.3.0.0
 * No changes on the adapter.
 
