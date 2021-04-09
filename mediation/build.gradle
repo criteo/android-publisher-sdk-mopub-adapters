@@ -22,6 +22,7 @@ plugins {
     id("com.jfrog.bintray") version "1.8.5"
     id("com.banno.gordon")
     id("fr.pturpin.slack-publish") version "0.2.0"
+    id("signing")
 }
 
 gordon.retryQuota = 3
@@ -81,11 +82,11 @@ dependencies {
     def mopubVersion = "5.13.1"
 
     if (isSnapshot) {
-        releaseApi("com.criteo.publisher:criteo-publisher-sdk-development:$sdk_version+")
+        releaseApi("com.criteo.publisher:criteo-publisher-sdk-development:$sdk_dev_dynamic_version")
     } else {
         releaseApi("com.criteo.publisher:criteo-publisher-sdk:$sdk_version")
     }
-    debugApi("com.criteo.publisher:criteo-publisher-sdk-debug:$sdk_version+")
+    debugApi("com.criteo.publisher:criteo-publisher-sdk-debug:$sdk_dev_dynamic_version")
 
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
 
@@ -108,7 +109,7 @@ dependencies {
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
     testImplementation("org.assertj:assertj-core:3.16.1")
     testImplementation("androidx.legacy:legacy-support-core-utils:1.0.0")
-    testImplementation("com.criteo.publisher:criteo-publisher-sdk-test-utils:$sdk_version+")
+    testImplementation("com.criteo.publisher:criteo-publisher-sdk-test-utils:$sdk_dev_dynamic_version")
 
     testImplementation("com.mopub:mopub-sdk-banner:$mopubVersion@aar") {
         transitive = true
@@ -132,7 +133,7 @@ dependencies {
 
     androidTestImplementation("org.mockito:mockito-android:3.3.0")
 
-    androidTestImplementation("com.criteo.publisher:criteo-publisher-sdk-test-utils:$sdk_version+")
+    androidTestImplementation("com.criteo.publisher:criteo-publisher-sdk-test-utils:$sdk_dev_dynamic_version")
 
     androidTestImplementation("com.google.android.gms:play-services-ads:15.0.0") {
         because("Needed to retrieve the device ID")
@@ -163,7 +164,7 @@ def publicationDescription = "Criteo Direct Bidding for App solution with MoPub 
 def publicationWebsite = "https://publisherdocs.criteotilt.com/app/android/mediation/mopub/"
 def githubUrl = "https://github.com/criteo/android-publisher-sdk-mopub-adapters"
 
-def groupId = "com.criteo.mediation.mopub"
+def groupId = parent.group
 def artifactId
 if (isSnapshot) {
     artifactId = "criteo-adapter-development"
@@ -210,6 +211,12 @@ publishing {
 
                 developers {
                     // We rely on Git to recognize contributors
+                    developer {
+                        name = "R&D Direct"
+                        email = "rnd-direct@criteo.com"
+                        organization = "Criteo"
+                        organizationUrl = "https://www.criteo.com/"
+                    }
                 }
 
                 scm {
@@ -258,6 +265,16 @@ bintray {
 
 publishing {
     with devRepository
+}
+
+signing {
+    def secretKey = System.getenv("MAVEN_SECRING_GPG_BASE64")
+    def password = System.getenv("SONATYPE_PASSWORD")
+
+    if (secretKey != null && password != null) {
+        useInMemoryPgpKeys(secretKey, password)
+        sign(publishing.publications.withType(MavenPublication))
+    }
 }
 
 import com.slack.api.model.block.composition.BlockCompositions
