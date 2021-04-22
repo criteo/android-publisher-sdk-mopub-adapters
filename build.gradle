@@ -43,7 +43,6 @@ allprojects {
         jcenter {
             content {
                 includeGroup("com.mopub") // TODO https://github.com/mopub/mopub-android-sdk/issues/455
-                includeGroup("com.criteo.publisher") // TODO DPP-3180 Remove once SDK is on maven central
             }
         }
         mavenLocal()
