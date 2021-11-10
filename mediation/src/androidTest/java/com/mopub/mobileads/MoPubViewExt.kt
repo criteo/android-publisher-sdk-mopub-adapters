@@ -1,6 +1,6 @@
 package com.mopub.mobileads
 
-import com.criteo.publisher.concurrent.ThreadingUtil.runOnMainThreadAndWait
+import android.os.Looper
 import com.mopub.network.AdResponse
 
 /**
@@ -10,7 +10,11 @@ import com.mopub.network.AdResponse
  * ad and invoke the success callback.
  */
 fun MoPubView.loadAd(adResponse: AdResponse) {
-  runOnMainThreadAndWait {
-    getAdViewController()?.onAdLoadSuccess(adResponse)
+  // MoPub needs a looper to be prepared because it is creating an handler used for timeout. We
+  // don't need to actually loop it as we don't mind about the timeout.
+  if (Looper.myLooper() == null) {
+    Looper.prepare()
   }
+
+  getAdViewController()?.onAdLoadSuccess(adResponse)
 }
