@@ -4,6 +4,7 @@ Note that all version `X.Y.Z.T` of this adapter have been tested against the mat
 `X.Y.Z` of the Publisher SDK.
 
 ## Next version
+* Support loading of banner from worker thread
 
 ## Version 4.5.0.0
 * No changes on the adapter.

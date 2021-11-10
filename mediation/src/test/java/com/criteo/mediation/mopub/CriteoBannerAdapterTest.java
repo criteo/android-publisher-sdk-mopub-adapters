@@ -31,6 +31,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function0;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -103,6 +106,13 @@ public class CriteoBannerAdapterTest {
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
+
+    ThreadingUtil.setInstance(new ThreadingUtil() {
+      @Override
+      public void runOnUiThread(@NotNull Function0<Unit> command) {
+        command.invoke();
+      }
+    });
   }
 
   @Test

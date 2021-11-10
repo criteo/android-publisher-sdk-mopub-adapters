@@ -17,6 +17,8 @@ package com.criteo.mediation.mopub
 
 import android.app.Activity
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import com.criteo.publisher.CriteoBannerView
 import com.criteo.publisher.model.AdSize
 import com.criteo.publisher.model.BannerAdUnit
@@ -69,11 +71,15 @@ class CriteoBannerAdapter @VisibleForTesting internal constructor(
     try {
       val bannerAdUnit = BannerAdUnit(adUnitId, adSize)
       val listener = CriteoBannerEventListener(mLoadListener) { mInteractionListener }
-      bannerView = CriteoBannerView(context, bannerAdUnit).apply {
-        setCriteoBannerAdListener(listener)
-        loadAd()
+
+      ThreadingUtil.instance.runOnUiThread {
+        bannerView = CriteoBannerView(context, bannerAdUnit).apply {
+          setCriteoBannerAdListener(listener)
+          loadAd()
+        }
+
+        MoPubLog.log(LOAD_ATTEMPTED, TAG, "BannerView is loading")
       }
-      MoPubLog.log(LOAD_ATTEMPTED, TAG, "BannerView is loading")
     } catch (e: Exception) {
       MoPubLog.log(LOAD_FAILED, TAG, "Initialization failed")
       mLoadListener.onAdLoadFailed(INTERNAL_ERROR)
