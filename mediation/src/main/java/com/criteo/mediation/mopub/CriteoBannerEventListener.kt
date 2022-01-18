@@ -21,16 +21,16 @@ import com.criteo.publisher.CriteoErrorCode
 import com.mopub.mobileads.AdLifecycleListener
 
 class CriteoBannerEventListener(
-    private val loadListener: AdLifecycleListener.LoadListener,
+    private val loadListener: AdLifecycleListener.LoadListener?,
     private val interactionListenerRef: () -> AdLifecycleListener.InteractionListener?
 ) : CriteoBannerAdListener {
 
   override fun onAdReceived(view: CriteoBannerView) {
-    loadListener.onAdLoaded()
+    loadListener?.onAdLoaded()
   }
 
   override fun onAdFailedToReceive(code: CriteoErrorCode) {
-    loadListener.onAdLoadFailed(ErrorCode.toMoPub(code))
+    loadListener?.onAdLoadFailed(ErrorCode.toMoPub(code))
   }
 
   override fun onAdClicked() {

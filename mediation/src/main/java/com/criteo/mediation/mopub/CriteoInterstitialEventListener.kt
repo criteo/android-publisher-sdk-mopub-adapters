@@ -23,16 +23,16 @@ import com.mopub.mobileads.AdLifecycleListener
 import com.mopub.mobileads.MoPubErrorCode.NETWORK_TIMEOUT
 
 class CriteoInterstitialEventListener(
-    private val loadListener: AdLifecycleListener.LoadListener,
+    private val loadListener: AdLifecycleListener.LoadListener?,
     private val interactionListenerRef: () -> AdLifecycleListener.InteractionListener?
 ) : CriteoInterstitialAdListener {
 
   override fun onAdReceived(interstitial: CriteoInterstitial) {
-    loadListener.onAdLoaded()
+    loadListener?.onAdLoaded()
   }
 
   override fun onAdFailedToReceive(code: CriteoErrorCode) {
-    loadListener.onAdLoadFailed(toMoPub(code))
+    loadListener?.onAdLoadFailed(toMoPub(code))
   }
 
   override fun onAdOpened() {

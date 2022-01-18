@@ -78,7 +78,7 @@ configurations.all {
 }
 
 dependencies {
-    def mopubVersion = "5.13.1"
+    def mopubVersion = "5.17.0"
 
     if (isSnapshot) {
         releaseApi("com.criteo.publisher:criteo-publisher-sdk-development:$sdk_dev_dynamic_version")
