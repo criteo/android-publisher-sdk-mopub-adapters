@@ -40,11 +40,6 @@ allprojects {
     repositories {
         google()
         mavenCentral()
-        jcenter {
-            content {
-                includeGroup("com.mopub") // TODO https://github.com/mopub/mopub-android-sdk/issues/455
-            }
-        }
         mavenLocal()
     }
 }

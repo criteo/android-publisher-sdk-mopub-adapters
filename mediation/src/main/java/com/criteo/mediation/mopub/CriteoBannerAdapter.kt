@@ -47,7 +47,7 @@ class CriteoBannerAdapter @VisibleForTesting internal constructor(
     val serverExtras = adData.extras
     if (serverExtras.isEmpty()) {
       MoPubLog.log(LOAD_FAILED, TAG, "Server parameters are empty")
-      mLoadListener.onAdLoadFailed(ADAPTER_CONFIGURATION_ERROR)
+      mLoadListener?.onAdLoadFailed(ADAPTER_CONFIGURATION_ERROR)
       return
     }
 
@@ -55,14 +55,14 @@ class CriteoBannerAdapter @VisibleForTesting internal constructor(
     val criteoPublisherId = serverExtras[CRITEO_PUBLISHER_ID]
     if (adSize == null || criteoPublisherId == null) {
       MoPubLog.log(LOAD_FAILED, TAG, "CriteoPublisherId cannot be null")
-      mLoadListener.onAdLoadFailed(ADAPTER_CONFIGURATION_ERROR)
+      mLoadListener?.onAdLoadFailed(ADAPTER_CONFIGURATION_ERROR)
       return
     }
 
     val adUnitId = serverExtras[ADUNIT_ID]
     if (adUnitId == null) {
       MoPubLog.log(LOAD_FAILED, TAG, "Missing adUnit Id")
-      mLoadListener.onAdLoadFailed(MISSING_AD_UNIT_ID)
+      mLoadListener?.onAdLoadFailed(MISSING_AD_UNIT_ID)
       return
     }
 
@@ -82,7 +82,7 @@ class CriteoBannerAdapter @VisibleForTesting internal constructor(
       }
     } catch (e: Exception) {
       MoPubLog.log(LOAD_FAILED, TAG, "Initialization failed")
-      mLoadListener.onAdLoadFailed(INTERNAL_ERROR)
+      mLoadListener?.onAdLoadFailed(INTERNAL_ERROR)
     }
   }
 
