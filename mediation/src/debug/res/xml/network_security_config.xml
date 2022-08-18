@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<network-security-config>
-  <debug-overrides>
-    <trust-anchors>
-      <!-- Trust self-signed CAs of CDB mock -->
-      <certificates src="@raw/localhost"/>
-    </trust-anchors>
-  </debug-overrides>
-</network-security-config>
